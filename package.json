@@ -1,8 +1,10 @@
 {
   "name": "twLaw",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Web Server for Taiwan Law",
-  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
   "keywords": [
     "taiwan",
     "law"
@@ -10,6 +12,7 @@
   "author": "kong0107",
   "license": "ISC",
   "dependencies": {
+    "express": "^4.13.3",
     "mongodb": "^2.1.4"
   }
 }

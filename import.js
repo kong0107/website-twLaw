@@ -7,7 +7,7 @@
 /**
  * Configuration.
  */
-var dburl = "mongodb://localhost:27017/twLaw";
+var config = require('./config.js');
 var jsondir = "../mojLawSplit/json/";
 var subdirs = ["FalV", "Eng_FalV", "MingLing", "Eng_MingLing"];
 
@@ -16,7 +16,7 @@ var MongoClient = require("mongodb").MongoClient;
 
 var coll;
 
-MongoClient.connect(dburl, function(err, db) {
+MongoClient.connect(config.dburl, function(err, db) {
 	if(err) throw err;
 	console.log("Connected to the database.");
 

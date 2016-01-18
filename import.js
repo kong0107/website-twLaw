@@ -8,7 +8,7 @@
  * Configuration.
  */
 var config = require('./config.js');
-var jsondir = "../mojLawSplit/json/";
+var jsondir = config.dataDir + 'json/';
 var subdirs = ["FalV", "Eng_FalV", "MingLing", "Eng_MingLing"];
 
 var fs = require("fs");

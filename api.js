@@ -7,7 +7,7 @@ var db;
 
 MongoClient.connect(dburl, function(err, database) {
 	if(err) throw err;
-	console.log("Connected to the database.");
+	console.log('Connected to the database.');
 	db = database;
 });
 
@@ -30,9 +30,9 @@ router.get('/law/:name?', function(req, res) {
 		return;
 	}
 	db.collection('latest')
-	.findOne({"法規名稱": name}, function(err, doc) {
+	.findOne({'法規名稱': name}, function(err, doc) {
 		if(!doc) {
-			res.jsonp({error: 1, message: "資料庫中無此法規"});
+			res.jsonp({error: 1, message: '資料庫中無此法規'});
 			return;
 		}
 		delete doc._id;

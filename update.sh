@@ -21,6 +21,6 @@ mv mojLawSplitJSON-$1 json
 rm -rf json/HisMingLing
 rm -rf json/Eng_MingLing
 rm -rf json/Eng_FalV
-mv json/UpdateDate.txt ${OPENSHIFT_REPO_DIR}data
+cp json/UpdateDate.txt .
 
 node ${OPENSHIFT_REPO_DIR}import.js

@@ -3,17 +3,20 @@ html(lang='tw')
 	head
 		meta(charset='utf-8')
 		meta(name='viewport',content='width=device-width, initial-scale=1')
-		title= title
+		title= config.pageTitle||config.siteName
 		link(rel='stylesheet', href='/stylesheets/std.css')
 		link(rel='stylesheet', href='/stylesheets/main.css')
 	body
 		header
-			a#brand(href='/')= title
+			a#brand(href='/')= config.siteName
 			nav#siteNav
 				ul
 			form#searchBar
 		section
 			block content
 		footer 
-			if lawUpdate
-				span 法規資料庫更新日期： #{lawUpdate}
+			if config.lawUpdate
+				span 法規資料更新日期： #{config.lawUpdate}
+			nav: ul.inlineList
+				li: a(href='http://law.moj.gov.tw/PublicData/DevelopGuide.aspx', target='_blank', title='全國法規資料庫') 資料來源
+				li: a(href='https://github.com/kong0107/twLaw', target='_blank', title='GitHub') 複製本站

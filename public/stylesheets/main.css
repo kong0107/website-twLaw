@@ -2,12 +2,17 @@
  * This file shall apply to a specific site.
  */
 
+body {
+	background-color: #000;
+	color: #fff;
+}
+
 /**
  * Header
  */
 body > header {
-	background-color: #000;
-	color: #fff;
+	background-color: #ccc;
+	color: #000;
 }
 body > header > * {
 	float: left;
@@ -71,9 +76,15 @@ h6 { font-size: 120%; }
 	padding: .3em;
 }
 
+a { color: inherit; }
+a:hover { text-decoration: none; }
+
 nav .inlineList li {
 	padding: .2em .5em;
 	border-right: 1px solid #ccc;
+}
+nav .inlineList li:last-of-type {
+	border-right: none;
 }
 
 .chapter {
@@ -94,8 +105,8 @@ nav .inlineList li {
  * Footer
  */
 body > footer {
-	background-color: #000;
-	color: #fff;
+	background-color: #ccc;
+	color: #000;
 	text-align: center;
 	padding: .5em;
 	font-size: x-small;

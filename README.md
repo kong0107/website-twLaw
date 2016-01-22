@@ -2,7 +2,8 @@
 Web Server for Taiwan Law
 
 ## Instance
-http://twlaw-kong0107.rhcloud.com/api/law/%E4%B8%AD%E8%8F%AF%E6%B0%91%E5%9C%8B%E6%86%B2%E6%B3%95
+HTML: [憲法第二章](http://twlaw-kong0107.rhcloud.com/law/A0000001#第 二 章 人民之權利義務)
+JSON: [憲法全文](http://twlaw-kong0107.rhcloud.com/api/law/A0000001)
 
 ## API
 回傳 JSON ，支援 JSONP 。

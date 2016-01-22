@@ -55,18 +55,37 @@ body > header a {
 /**
  * Content
  */
-h1 { font-size: 300%; }
-h2 { font-size: 250%; }
-h3 { font-size: 200%; }
-h4 { font-size: 175%; }
-h5 { font-size: 150%; }
-h6 { font-size: 125%; }
+body > section {
+	padding: .5em;
+}
+h1 { font-size: 200%; }
+h2 { font-size: 175%; margin-top: .5em; }
+h3 { font-size: 150%; }
+h4 { font-size: 140%; }
+h5 { font-size: 130%; }
+h6 { font-size: 120%; }
 .dlTable > dl > dt { font-weight: bold; }
 .tableCell,
 .dlTable > dl > dt,
 .dlTable > dl > dd {
 	padding: .3em;
-	border: 1px solid #000;
+}
+
+nav .inlineList li {
+	padding: .2em .5em;
+	border-right: 1px solid #ccc;
+}
+
+.chapter {
+	font-weight: bold;
+	font-size: large;
+	margin-top: .5em;
+}
+.artTitle {
+	font-weight: bold;
+	margin-top: .5em;
+	padding-top: .5em;
+	border-top: 1px solid #ccc;
 }
 
 

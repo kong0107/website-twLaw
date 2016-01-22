@@ -1,0 +1,34 @@
+extends layout
+
+block content
+	h1= law.法規名稱
+	nav: ul.inlineList
+		li: a(href='/api/law/'+law.PCode, download=law.PCode+'.json') 下載 JSON 格式
+		li: a(href=law.法規網址, target='_blank') 全國法規資料庫
+	.dlTable
+		dl
+			dt 最新異動日期
+			dd= law.最新異動日期
+		dl
+			dt 法規性質
+			dd= law.法規性質
+		dl
+			dt 法規類別
+			dd= law.法規類別
+		if law.英文法規名稱
+			dl
+				dt 英文法規名稱
+				dd= law.英文法規名稱
+	.chapter: a(name='沿革內容') 沿革內容
+	.rawdata= law.沿革內容
+	
+	h2: a(name='法規內容') 法規內容
+	if law.前言
+		.artTitle: a(name='前言') 前言
+		.rawdata= law.前言
+	each article in law.法規內容
+		if article.條號
+			.artTitle: a(name=article.條號)= article.條號
+			.rawdata= article.條文內容
+		else
+			.chapter: a(name=article.編章節)= article.編章節

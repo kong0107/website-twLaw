@@ -1,9 +1,8 @@
 var config = require('../config.js');
 var express = require('express');
 
-var router = express.Router();
-module.exports = router;
+var router = module.exports = express.Router();
 
 router.get('/', function(req, res, next) {
-	res.send('Hello World');
+	res.render('index', { title: config.siteName });
 });

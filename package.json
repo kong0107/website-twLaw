@@ -1,6 +1,6 @@
 {
   "name": "twLaw",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Web Server for Taiwan Law",
   "keywords": [
     "taiwan",
@@ -9,7 +9,9 @@
   "author": "kong0107",
   "license": "ISC",
   "dependencies": {
+    "debug": "^2.2.0",
     "express": "^4.13.3",
+    "jade": "^1.11.0",
     "mongodb": "^2.1.4"
   }
 }

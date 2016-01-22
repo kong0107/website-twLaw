@@ -1,4 +1,6 @@
-module.exports = {
+var fs = require('fs');
+
+var config = {
 	hostname	: process.env.OPENSHIFT_NODEJS_IP 		|| '127.0.0.1',
 	port		: process.env.OPENSHIFT_NODEJS_PORT 	|| 8080,
 	dburl		: (process.env.OPENSHIFT_MONGODB_DB_URL	|| 'mongodb://localhost:27017/') + 'twlaw',
@@ -6,3 +8,7 @@ module.exports = {
 
 	siteName	: '法規查詢'
 };
+
+config.lawUpdate = fs.readFileSync(config.dataDir + 'UpdateDate.txt');
+
+module.exports = config;

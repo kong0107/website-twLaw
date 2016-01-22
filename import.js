@@ -9,7 +9,7 @@
  */
 var config = require('./config.js');
 var jsondir = config.dataDir + 'json/';
-var subdirs = ["FalV", "Eng_FalV", "MingLing", "Eng_MingLing"];
+var subdirs = ["FalV", "MingLing"];
 
 var fs = require("fs");
 var MongoClient = require("mongodb").MongoClient;
@@ -21,10 +21,13 @@ MongoClient.connect(config.dburl, function(err, db) {
 	console.log("Connected to the database.");
 
 	coll = db.collection("latest");
-	
-	parseDir(0, function(){
-		console.log("Program finished.");
-		db.close();
+	coll.deleteMany({PCode: {$exists: false}}, null, function(err, res) {
+		if(err) throw err;
+		if(res.deletedCount) console.log("Deleted %d documents without PCode.", res.deletedCount);
+		parseDir(0, function(){
+			console.log("Program finished.");
+			db.close();
+		});
 	});
 });
 
@@ -44,7 +47,7 @@ function parseDir(index, callback) {
 
 function parseFile(dir, files, index, callback) {
 	if(index == files.length) {
-		console.log("\r\nAll files in one directory parsed.");
+		console.log("\r\nParsed a directory.");
 		setImmediate(callback);
 		return;
 	}
@@ -54,8 +57,12 @@ function parseFile(dir, files, index, callback) {
 		setImmediate(parseFile, dir, files, index + 1, callback);
 		return;
 	}
-	var json = fs.readFileSync(dir + files[index], "utf8");
-	coll.insertOne(JSON.parse(json), function(err, result) {
+	var jsObj = JSON.parse(fs.readFileSync(dir + files[index], "utf8"));
+
+	var PCode = jsObj.法規網址.substr(jsObj.法規網址.indexOf("PCODE") + 6);
+	jsObj.PCode = PCode;
+
+	coll.updateOne({PCode: PCode}, jsObj, {upsert: true}, function(err, result) {
 		if(err) throw err;
 		setImmediate(parseFile, dir, files, index + 1, callback);
 	});

@@ -1,4 +1,4 @@
-var config = require('./config.js');
+var config = require('../config.js');
 var express = require('express');
 var MongoClient = require('mongodb');
 

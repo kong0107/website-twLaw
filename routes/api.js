@@ -1,16 +1,5 @@
 var config = require('../config.js');
 var express = require('express');
-var MongoClient = require('mongodb');
-
-var dburl = config.dburl;
-var db;
-
-MongoClient.connect(dburl, function(err, database) {
-	if(err) throw err;
-	console.log('Connected to the database.');
-	db = database;
-});
-
 
 var router = express.Router();
 module.exports = router;
@@ -25,7 +14,7 @@ router.get('/law/:name?', function(req, res) {
 		res.send('API Law');
 		return;
 	}
-	var coll = db.collection('latest');
+	var coll = config.db.collection('latest');
 
 	coll.findOne(
 		{$or: [

@@ -10,4 +10,6 @@ block content
 						.lawCategory= law.法規類別
 						.lawName(class=law.廢止註記 ? 'discard' : '')
 							a(href='/law/'+law.PCode)= law.法規名稱
-						.rawdata= law.lastUpdateMessage
+						div(style='font-size: small;')
+							span(title='沿革次數') [#{law.沿革內容.length}]
+							span= law.沿革內容[law.沿革內容.length - 1]

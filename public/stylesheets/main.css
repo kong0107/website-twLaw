@@ -75,6 +75,7 @@ h3 { font-size: 150%; }
 h4 { font-size: 140%; }
 h5 { font-size: 130%; }
 h6 { font-size: 120%; }
+ol { padding-left: 40px; }
 .dlTable > dl > dt { font-weight: bold; }
 .tableCell,
 .dlTable > dl > dt,
@@ -84,8 +85,8 @@ h6 { font-size: 120%; }
 .date { font-family: monospace; }
 .noMarker { list-style-type: none; }
 
-a { color: inherit; }
-a:hover { text-decoration: none; }
+a { color: inherit; text-decoration: none; }
+a:hover { text-decoration: underline; }
 
 nav .inlineList li {
 	padding: .2em .5em;

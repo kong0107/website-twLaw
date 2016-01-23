@@ -23,7 +23,7 @@ body > section:after {
 	display: block;
 	clear: both;
 }
-body > section:after { padding-bottom: 2em; }
+body > section:after { padding-bottom: 4em; }
 body > footer {
 	width: 100%;
 	position: absolute;

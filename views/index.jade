@@ -1,4 +1,13 @@
 extends layout
 
 block content
-	p 歡迎來到#{config.siteName}，系統尚在建置中。
+	if latest
+		section
+			h1 最新異動法規
+			ul.noMarker
+				each law in latest
+					li.lawInfo
+						.lawCategory= law.法規類別
+						.lawName(class=law.廢止註記 ? 'discard' : '')
+							a(href='/law/'+law.PCode)= law.法規名稱
+						.rawdata= law.lastUpdateMessage

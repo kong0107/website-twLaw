@@ -1,7 +1,7 @@
 extends layout
 
 block content
-	h1= law.法規名稱
+	h1(class=law.廢止註記 ? 'discard' : '')= law.法規名稱
 	nav: ul.inlineList
 		li: a(href='/api/law/'+law.PCode, download=law.PCode+'.json') 下載 JSON 格式
 		li: a(href=law.法規網址, target='_blank') 全國法規資料庫
@@ -19,6 +19,10 @@ block content
 			dl
 				dt 英文法規名稱
 				dd= law.英文法規名稱
+		if law.廢止註記
+			dl
+				dt 狀態
+				dd 已廢止
 	.chapter: a(name='沿革內容') 沿革內容
 	.rawdata= law.沿革內容
 	

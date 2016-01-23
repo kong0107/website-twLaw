@@ -9,14 +9,16 @@ html(lang='tw')
 	body
 		header
 			a#brand(href='/')= config.siteName
+			if config.lawUpdate
+				span#lawUpdate 最後更新 #{config.lawUpdate}
 			nav#siteNav
 				ul
 			form#searchBar
 		section
 			block content
-		footer 
+		footer
 			if config.lawUpdate
 				span 法規資料更新日期： #{config.lawUpdate}
 			nav: ul.inlineList
 				li: a(href='http://law.moj.gov.tw/PublicData/DevelopGuide.aspx', target='_blank', title='全國法規資料庫') 資料來源
-				li: a(href='https://github.com/kong0107/twLaw', target='_blank', title='GitHub') 複製本站
+				li: a(href='https://github.com/kong0107/twLaw/issues', target='_blank', title='GitHub') 錯誤回報

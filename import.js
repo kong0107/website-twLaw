@@ -21,9 +21,9 @@ MongoClient.connect(config.dburl, function(err, db) {
 	console.log("Connected to the database.");
 
 	coll = db.collection("latest");
-	coll.deleteMany({PCode: {$exists: false}}, null, function(err, res) {
+	coll.drop(function(err, res) {
 		if(err) throw err;
-		if(res.deletedCount) console.log("Deleted %d documents without PCode.", res.deletedCount);
+		console.log("Dropped the old collection.", res);
 		parseDir(0, function(){
 			console.log("Program finished.");
 			db.close();
@@ -47,7 +47,7 @@ function parseDir(index, callback) {
 
 function parseFile(dir, files, index, callback) {
 	if(index == files.length) {
-		console.log("\r\nParsed a directory.");
+		console.log("\r\nParsed %d files.", index);
 		setImmediate(callback);
 		return;
 	}
@@ -62,7 +62,7 @@ function parseFile(dir, files, index, callback) {
 	var PCode = jsObj.法規網址.substr(jsObj.法規網址.indexOf("PCODE") + 6);
 	jsObj.PCode = PCode;
 
-	coll.updateOne({PCode: PCode}, jsObj, {upsert: true}, function(err, result) {
+	coll.insertOne(jsObj, function(err, result) {
 		if(err) throw err;
 		setImmediate(parseFile, dir, files, index + 1, callback);
 	});

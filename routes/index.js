@@ -15,24 +15,3 @@ router.get('/', function(req, res) {
 		res.render('index', model);
 	});
 });
-
-router.get('/law/:name', function(req, res, next) {
-	var name = req.params.name;
-
-	config.db.collection('latest').findOne(
-		{$or: [
-			{'法規名稱': name},
-			{'PCode': name}
-		]},
-		function(err, doc) {
-			if(err || !doc) return next();
-			config.pageTitle = doc.法規名稱;
-			doc.沿革內容 = parser.parseHistory(doc.沿革內容);
-			delete doc._id;
-			model.law = doc;
-			res.render('law', model);
-		}
-	);
-}, function(req, res) {
-	res.render('index', model);
-});

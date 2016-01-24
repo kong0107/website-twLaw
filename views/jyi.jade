@@ -1,0 +1,28 @@
+extends layout
+
+block content
+	header
+		h1= config.pageTitle
+		em= jyi.title
+	nav: ul.inlineList
+		li: a(href='http://www.judicial.gov.tw/constitutionalcourt/p03_01.asp?expno='+jyi.number, target='_blank') 司法院網站
+	.dlTable
+		dl
+			dt 公布日期
+			dd= jyi.date
+		dl
+			dt 爭點
+			dd= jyi.issue
+
+	section
+		h2: a(name='holding') 解釋文
+		each para in jyi.holding
+			p= para
+	section
+		h2: a(name='reasoning') 理由書
+		each para in jyi.reasoning
+			p= para
+	if jyi.facts
+		section
+			h2: a(name='facts') 事實
+			.rawdata= jyi.facts

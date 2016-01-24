@@ -22,7 +22,7 @@ MongoClient.connect(config.dburl, function(err, db) {
 
 	coll = db.collection("latest");
 	coll.drop(function(err, res) {
-		if(err) throw err;
+		if(err && err.code != 26) throw err;
 		console.log("Dropped the old collection.", res);
 		parseDir(0, function(){
 			console.log("Program finished.");

@@ -7,4 +7,8 @@ parser.parseHistory = function(str) {
 	});
 }
 
+parser.parseArticle = function(str) {
+
+}
+
 module.exports = parser;

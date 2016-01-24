@@ -3,7 +3,7 @@ extends layout
 block content
 	h1(class=law.廢止註記 ? 'discard' : '')= law.法規名稱
 	nav: ul.inlineList
-		li: a(href='/api/law/'+law.PCode, download=law.PCode+'.json') 下載 JSON 格式
+		li: a(href='/api/law/'+law.PCode, download=law.PCode+'.json') JSON
 		li: a(href=law.法規網址, target='_blank') 全國法規資料庫
 	.dlTable
 		dl

@@ -22,5 +22,13 @@ app.use('/raw/json', express.static(config.dataDir + 'json'));
 app.use('/', require('./routes/index.js'));
 app.use('/api', require('./routes/api.js'));
 
+app.use('/search', require('./routes/search.js'));
 app.use('/law', require('./routes/law.js'));
 app.use('/jyi', require('./routes/jyi.js'));
+
+app.use(function(req, res) {
+	res.status(404).render('404', {
+		config: config,
+		orignalUrl: req.orignalUrl
+	});
+});

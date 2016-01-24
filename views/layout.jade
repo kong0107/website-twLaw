@@ -2,18 +2,20 @@ doctype html
 html(lang='tw')
 	head
 		meta(charset='utf-8')
-		meta(name='viewport',content='width=device-width, initial-scale=1')
+		meta(name='viewport', content='width=device-width, initial-scale=1')
 		title= config.pageTitle||config.siteName
 		link(rel='stylesheet', href='/stylesheets/std.css')
 		link(rel='stylesheet', href='/stylesheets/main.css')
 	body
 		header
 			a#brand(href='/')= config.siteName
-			if config.lawUpdate
-				span#lawUpdate 最後更新 #{config.lawUpdate}
 			nav#siteNav
 				ul
-			form#searchBar
+					li: a(href='/law') 法規
+					li: a(href='/jyi') 釋字
+			form#searchBar(action='/search')
+				input(type='text', name='q')
+				input(type='submit', value='查詢')
 		section
 			block content
 		footer

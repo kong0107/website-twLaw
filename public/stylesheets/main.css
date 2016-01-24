@@ -11,15 +11,14 @@ body {
  * Header
  */
 body > header {
-	background-color: #ccc;
+	background-color: #bbb;
 	color: #000;
 	padding: .2em;
 }
 body > header > * {
 	float: left;
 }
-body > header a {
-	color: inherit;
+body > header a[href]:hover {
 	text-decoration: none;
 }
 #brand {
@@ -32,23 +31,23 @@ body > header a {
 	font-size: small;
 }
 #siteNav {
-	margin: 1em 1em .5em 4em;
+	margin: .2em 1em;
 }
 #siteNav li {
 	list-style-type: none;
 	display: inline-block;
 	margin: .5em;
 	padding: .3em .5em;
-	border: 1px solid #ccc;
-	background-color: #444;
+	border: 1px solid #888;
+	background-color: #ddd;
 }
 #siteNav li:hover {
-	background-color: #000;
-	color: #ff0;
+	background-color: #fff;
+	color: inherit;
 }
 #searchBar {
 	float: right;
-	margin: 1em;
+	margin: .5em;
 	position: relative;
 }
 #searchBar > input[type=text] {
@@ -98,7 +97,7 @@ nav .inlineList li:last-of-type {
 	border-right: none;
 }
 
-.discard { color: #ccc; }
+.discard { color: #bbb; }
 .discard:hover { color: inherit; }
 
 .history {
@@ -131,7 +130,7 @@ nav .inlineList li:last-of-type {
 	font-weight: bold;
 	margin-top: .5em;
 	padding-top: .5em;
-	border-top: 1px solid #ccc;
+	border-top: 1px solid #bbb;
 }
 
 
@@ -139,7 +138,7 @@ nav .inlineList li:last-of-type {
  * Footer
  */
 body > footer {
-	background-color: #ccc;
+	background-color: #bbb;
 	color: #000;
 	text-align: center;
 	padding: .5em;

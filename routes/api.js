@@ -61,3 +61,10 @@ router.get('/jyi/:no?', function(req, res) {
 		)
 	}
 });
+
+router.use(function(req, res) {
+	res.status(404).jsonp({
+		error: '404',
+		message: 'Not Found'
+	});
+});

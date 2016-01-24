@@ -76,17 +76,18 @@ h4 { font-size: 140%; }
 h5 { font-size: 130%; }
 h6 { font-size: 120%; }
 ol { padding-left: 40px; }
+a { color: inherit; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
 .dlTable > dl > dt { font-weight: bold; }
 .tableCell,
 .dlTable > dl > dt,
 .dlTable > dl > dd {
-	padding: .3em;
+	padding: .3em .5em .3em 0;
 }
 .date { font-family: monospace; }
 .noMarker { list-style-type: none; }
-
-a { color: inherit; text-decoration: none; }
-a:hover { text-decoration: underline; }
+.em { color: #ff0; font-weight: bold; }
 
 nav .inlineList li {
 	padding: .2em .5em;
@@ -96,11 +97,18 @@ nav .inlineList li:last-of-type {
 	border-right: none;
 }
 
-.discard {
-	background: url(http://law.moj.gov.tw/images/flag/Fei.gif) top left no-repeat;
-	padding-left: 16px;
+.discard { color: #ccc; }
+.discard:hover { color: inherit; }
+
+.history {
+	font-size: small;
+	font-family: monospace;
 }
 
+.lawList { list-style-type: none; }
+.lawList .lawName {
+	margin-bottom: .3em;
+}
 .lawInfo {
 	padding: .2em;
 	margin: .3em 0 1em 0;

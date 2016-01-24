@@ -4,12 +4,12 @@ block content
 	if latest
 		section
 			h1 最新異動法規
-			ul.noMarker
+			ul.lawList
 				each law in latest
-					li.lawInfo
-						.lawCategory= law.法規類別
-						.lawName(class=law.廢止註記 ? 'discard' : '')
+					li.lawInfo(class=law.廢止註記 ? 'discard' : '')
+						.lawCategory(title='類別')= law.法規類別
+						.lawName
 							a(href='/law/'+law.PCode)= law.法規名稱
-						div(style='font-size: small;')
-							span(title='沿革次數') [#{law.沿革內容.length}]
-							span= law.沿革內容[law.沿革內容.length - 1]
+						.history
+							span(title='異動次數') [#{law.沿革內容.length}]
+							span(title='最新異動說明')= law.沿革內容[law.沿革內容.length - 1]

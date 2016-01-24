@@ -8,7 +8,7 @@ mongodb.MongoClient.connect(config.dburl, function(err, db) {
 	
 	var coll = db.collection('jyi');
 	coll.drop(function(err, res) {
-		if(err && err.code != 26) throw err;
+		if(err) throw err;
 		console.log("Dropped the old collection.", res);
 		download('https://raw.githubusercontent.com/kong0107/constitutionalcourt/master/json/all.json', function(err, res) {
 			if(err) throw err;

@@ -4,6 +4,21 @@ var express = require('express');
 var router = module.exports = express.Router();
 var model = { config: config };
 
+router.get('/', function(req, res) {
+	config.db.collection('jyi').find().project({
+		number: 1, date: 1, holding: 1, _id: 0
+	}).sort({number: -1})
+	.toArray(function(err, docs) {
+		if(err) throw err;
+		config.pageTitle = '司法院釋字列表';
+		docs.forEach(function(doc) {
+			doc.holding = doc.holding.split('\n');
+		});
+		model.jyiList = docs;
+		res.render('jyi-index', model);
+	});
+});
+
 router.get('/:jyino', function(req, res, next) {
 	var jyino = parseInt(req.params.jyino);
 	if(isNaN(jyino)) return next();

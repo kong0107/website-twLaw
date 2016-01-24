@@ -1,0 +1,12 @@
+extends layout
+
+block content
+	h1= config.pageTitle
+
+	ul.lawList
+		each jyi in jyiList
+			li.lawInfo
+				h2: a(href='/jyi/'+jyi.number, name=jyi.number)= jyi.number
+				.date= jyi.date
+				each para in jyi.holding
+					p= para

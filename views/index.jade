@@ -1,4 +1,8 @@
 extends layout
 
 block content
-	h1 不知道要放甚麼的首頁
+	h1 首頁
+	p: em 還不知道首頁要放甚麼
+	form(action='/search')
+		input(type='text', name='q', placeholder='目前僅能依法規名稱蒐尋')
+		input(type='submit', value='查詢')

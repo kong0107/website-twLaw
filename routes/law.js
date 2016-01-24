@@ -14,6 +14,7 @@ router.get('/:name?', function(req, res, next) {
 				doc.沿革內容 = parser.parseHistory(doc.沿革內容);
 			});
 			model.lawList = docs;
+			config.pageTitle = '最新異動法規';
 			res.render('law-index', model);
 		});
 	}

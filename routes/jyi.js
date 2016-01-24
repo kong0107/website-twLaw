@@ -26,7 +26,7 @@ router.get('/:jyino', function(req, res, next) {
 		{'number': jyino},
 		function(err, doc) {
 			if(err || !doc) return next();
-			config.pageTitle = '司法院釋字第 ' + jyino + ' 號';
+			config.pageTitle = '釋字第 ' + jyino + ' 號';
 
 			doc.holding = doc.holding.split('\n');
 			doc.reasoning = doc.reasoning.substr(0, doc.reasoning.lastIndexOf('。') + 1).split('\n');

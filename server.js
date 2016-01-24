@@ -19,6 +19,11 @@ app.set('view engine', 'jade');
 app.use(express.static(__dirname + '/public'));
 app.use('/raw/json', express.static(config.dataDir + 'json'));
 
+app.use(function(req, res, next) {
+	delete config.pageTitle;
+	next();
+});
+
 app.use('/', require('./routes/index.js'));
 app.use('/api', require('./routes/api.js'));
 

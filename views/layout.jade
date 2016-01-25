@@ -19,8 +19,10 @@ html(lang='tw')
 		section
 			block content
 		footer
+			if config.counter
+				span ##{config.counter}
 			if config.lawUpdate
-				span 法規資料更新日期： #{config.lawUpdate}
+				span 法規資料更新日期： #[time= config.lawUpdate]
 			nav: ul.inlineList
 				li: a(href='http://law.moj.gov.tw/PublicData/DevelopGuide.aspx', target='_blank', title='全國法規資料庫') 資料來源
 				li: a(href='https://github.com/kong0107/twLaw/issues', target='_blank', title='GitHub') 錯誤回報

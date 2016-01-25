@@ -4,6 +4,8 @@ var MongoClient = require('mongodb');
 
 var debug = require('debug')(__filename.substr(__dirname.length + 1));
 
+config.counter = 0;
+
 MongoClient.connect(config.dburl, function(err, database) {
 	if(err) throw err;
 	console.log('Connected to the database.');
@@ -21,6 +23,7 @@ app.use('/raw/json', express.static(config.dataDir + 'json'));
 
 app.use(function(req, res, next) {
 	delete config.pageTitle;
+	config.counter++;
 	next();
 });
 

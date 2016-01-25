@@ -11,21 +11,28 @@ parser.parseHistory = function(str) {
 /**
  * 將條文內容字串，轉為巢狀結構
  *
+ * 憲法第 49 條其實沒有分項，但從全國法規資料庫是看不出來的，須經由立法院法律系統確認。
  * @param {string} str 以換行做為排版的條文內容字串。
- * @return {object} 物件有一至三成員：`pretext` {string}, `children` {array}, `posttext` {string} 。 `pretext` 是為了聯合國憲章第一、二條， `posttext` 是為了所得稅法第14條第九類第一款最後。
+ * @return {object} 物件有成員：
+ * * text {string}: 主文。
+ * * stratum {integer}: 屬第幾層。 -1 代表非依照全國法規標準法的「分段」，所得稅法中有很多。必定成為 siblings 或 posttexts 。
+ * * spaces {integer}: 換行後前面會有幾個半形空格。例如「一、」和「十一、」分別為 4 和 6 。
+ * * children {array}: 下一層的節點們，例如「項」下的「款」。
+ * * siblings {array}: 主文的分段（不含第一段）。目前發現有：所得稅法第4條第1項第16款、第22款、第14條第1項第1類、第2類、第4類第3款，以及憲法第48條。
+ * * posttexts {array}: 分層後出現的分段。目前僅發現所得稅法第14條第1項第9類第1款。
  */
 parser.parseArticle = function(str) {
 	var result = {children: []};
 	
 	/// Step 1: 把同屬於一元素的各行重新組起來，但保留最初的空白字元。
 	var eles = [];
-	var lines = str.split(/\r?\n/);
+	var lines = str.trim().split(/\r?\n/);
 	var isNew = true;
 	for(var i = 0; i < lines.length; ++i) {
 		var trimmed = lines[i].trim();
-		if(isNew && trimmed.charAt(0) != '但') eles.push({text: lines[i]});
+		if(isNew && trimmed.charAt(0) != '但') eles.push({text: lines[i]}); ///< 例如民法第95條
 		else eles[eles.length - 1].text += trimmed;
-		if(!isNew) eles[eles.length - 1].spacesDebug = lines[i].match(/\s*/)[0].length;
+		//if(!isNew) eles[eles.length - 1].spacesDebug = lines[i].match(/\s*/)[0].length;
 		isNew = /(：|︰|。|（刪除）)$/.exec(trimmed);
 	}
 	
@@ -40,6 +47,7 @@ parser.parseArticle = function(str) {
 		
 		var spacesAndOrdinal = match ? match[0] : eles[i].text.match(/\s*/)[0];
 		eles[i].spaces = strwidth(spacesAndOrdinal);
+		eles[i].text = eles[i].text.trim();
 	}
 	
 	/// Step 3: 做一棵樹。
@@ -47,25 +55,36 @@ parser.parseArticle = function(str) {
 	var parent = result;;
 	var prev = eles[0];
 	for(var i = 1; i < eles.length; ++i) {
-		if(eles[i].stratum == -1) {
-			if(!prev.siblings) prev.siblings = [];
-			prev.siblings.push(eles[i]);
-			continue;	///< 不改變 `prev`
-		}
-		
-		if(eles[i].stratum == prev.stratum) parent.children.push(eles[i]);
-		else if(eles[i].stratum > prev.stratum) {
-			parent = prev;
-			parent.children = [eles[i]];
-		}
-		else if(eles[i].stratum < prev.stratum) {
-			for(var j = i - 2; j >= 0; --j) {
-				if(eles[j].stratum >= 0 && eles[i].stratum > eles[j].stratum) break;
+		if(eles[i].stratum >= 0) {
+			if(eles[i].stratum == prev.stratum) parent.children.push(eles[i]);
+			else if(eles[i].stratum > prev.stratum) {
+				parent = prev;
+				parent.children = [eles[i]];
 			}
-			parent = (j < 0) ? result : eles[j];
-			parent.children.push(eles[i]);
+			else if(eles[i].stratum < prev.stratum) {
+				for(var j = i - 2; j >= 0; --j) {
+					if(eles[j].stratum >= 0 && eles[i].stratum > eles[j].stratum) break;
+				}
+				parent = (j < 0) ? result : eles[j];
+				parent.children.push(eles[i]);
+			}
+			prev = eles[i];
 		}
-		prev = eles[i];
+		else {
+			/// eles[i].stratum == -1
+			/// `prev` will not be re-assigned.
+			for(var j = i - 1; j >= 0; --j)
+				if(eles[j].stratum >= 0 && eles[i].spaces == eles[j].spaces) break;
+			
+			if(eles[j].children) {
+				if(!eles[j].posttexts) eles[j].posttexts = [];
+				eles[j].posttexts.push(eles[i]);
+			}
+			else {
+				if(!eles[j].siblings) eles[j].siblings = [];
+				eles[j].siblings.push(eles[i]);
+			}
+		}
 	}
 	
 	return result;
@@ -73,7 +92,7 @@ parser.parseArticle = function(str) {
 
 var stratums = [
     {	"name": "paragraphs",       ///< 用於CSS
-        "ordinal": /^(?! )/   ///< 此階層的序數文字，「不能」是global
+        "ordinal": /^(?![ 「])/   ///< 引號出現在憲法第48條
     },
     {	"name": "categories",
         "ordinal": /^第[一二三四五六七八九十]+類：/

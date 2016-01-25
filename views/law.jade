@@ -1,5 +1,19 @@
 extends layout
 
+mixin articleContent(content)
+	if content.text
+		p= content.text	
+	if content.siblings
+		each sib in content.siblings
+			p= sib.text
+	if content.children
+		ol(class={article: content.stratum === undefined})
+			each child in content.children
+				li: +articleContent(child)
+	if content.posttexts
+		each post in content.posttexts
+			p= post.text
+
 block content
 	h1(class=law.廢止註記 ? 'discard' : '')= law.法規名稱
 	nav: ul.inlineList
@@ -24,7 +38,7 @@ block content
 				dt 狀態
 				dd.em 已廢止
 
-	.chapter: a(name='沿革') 沿革
+	h2: a(name='沿革') 沿革
 	ol.history
 		each amend in law.沿革內容
 			li= amend
@@ -36,6 +50,10 @@ block content
 	each article in law.法規內容
 		if article.條號
 			.artTitle: a(name=article.條號)= article.條號
-			.rawdata= article.條文內容
+			+articleContent(article.content)
+			//-.rawdata #{JSON.stringify(article.content, null, '\t')}
+			//-.rawdata= article.條文內容
 		else
-			.chapter: a(name=article.編章節)= article.編章節
+			- var chapterType = article.編章節.charAt(article.編章節.lastIndexOf(" ") -1 )
+			.chapter(class=chapterType)
+				a(name=article.編章節)= article.編章節

@@ -1,7 +1,7 @@
 ul.lawList
 	each law in lawList
 		li.lawInfo(class=law.廢止註記 ? 'discard' : '')
-			.lawCategory(title='類別')= law.法規類別
+			span.lawCategory(title='類別')= law.法規類別
 			.lawName
 				a(href='/law/'+law.PCode)= law.法規名稱
 			.history

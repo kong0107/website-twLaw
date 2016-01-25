@@ -1,0 +1,13 @@
+mixin articleContent(content)
+	if content.text
+		p= content.text	
+	each sib in content.siblings
+		p= sib.text
+	if content.children
+		ol(class=content.stratum ? ('stratum'+content.stratum) : 'article')
+			each child in content.children
+				+articleContent(child)
+	each post in content.posttexts
+		p= post.text
+
+articleContent(content)

@@ -124,13 +124,37 @@ nav .inlineList li:last-of-type {
 .chapter {
 	font-weight: bold;
 	font-size: large;
-	margin-top: .5em;
+	margin-top: 1em;
+	background-color: #444;
 }
+
+.編 {font-size: 175%; text-indent: 0em; }
+.章 {font-size: 150%; text-indent: 1em; }
+.節 {font-size: 140%; text-indent: 2em; }
+.款 {font-size: 130%; text-indent: 3em; }
+.目 {font-size: 120%; text-indent: 4em; }
+
 .artTitle {
 	font-weight: bold;
 	margin-top: .5em;
 	padding-top: .5em;
 	border-top: 1px solid #bbb;
+}
+
+ol.article ol {
+	padding-left: 3em;
+}
+ol.article li {
+	list-style-type: none;
+}
+ol.article ol p:first-child {
+	text-indent: -3em;
+}
+ol.article > li:only-child {
+	list-style-type: disc;
+}
+ol.article > li:not(:only-child) {
+	list-style-type: upper-roman;
 }
 
 

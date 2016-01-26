@@ -12,7 +12,7 @@ router.get('/:q?', function(req, res, next) {
 	q = q.trim();
 	if(!q) return res.redirect('/');
 	model.q = q;
-	config.pageTitle = '搜尋「' + q + '」的結果';
+	res.locals.pageTitle = '搜尋「' + q + '」的結果';
 
 	var re = new RegExp(q);
 	config.db.collection('latest').find({$or:[

@@ -10,7 +10,7 @@ router.get('/', function(req, res) {
 	}).sort({number: -1})
 	.toArray(function(err, docs) {
 		if(err) throw err;
-		config.pageTitle = '司法院釋字列表';
+		res.locals.pageTitle = '司法院釋字列表';
 		docs.forEach(function(doc) {
 			doc.holding = doc.holding.split('\n');
 		});
@@ -26,7 +26,7 @@ router.get('/:jyino', function(req, res, next) {
 		{'number': jyino},
 		function(err, doc) {
 			if(err || !doc) return next();
-			config.pageTitle = '釋字第 ' + jyino + ' 號';
+			res.locals.pageTitle = '釋字第 ' + jyino + ' 號';
 
 			doc.holding = doc.holding.split('\n');
 			doc.reasoning = doc.reasoning.substr(0, doc.reasoning.lastIndexOf('。') + 1).split('\n');

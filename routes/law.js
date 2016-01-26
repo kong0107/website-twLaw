@@ -14,7 +14,7 @@ router.get('/:name?', function(req, res, next) {
 				doc.沿革內容 = parser.parseHistory(doc.沿革內容);
 			});
 			model.lawList = docs;
-			config.pageTitle = '最新異動法規';
+			res.locals.pageTitle = '最新異動法規';
 			res.render('law-index', model);
 		});
 	}
@@ -26,7 +26,7 @@ router.get('/:name?', function(req, res, next) {
 			]},
 			function(err, doc) {
 				if(err || !doc) return next();
-				config.pageTitle = doc.法規名稱;
+				res.locals.pageTitle = doc.法規名稱;
 				doc.沿革內容 = parser.parseHistory(doc.沿革內容);
 				doc.法規內容.forEach(function(article) {
 					if(article.條文內容) 

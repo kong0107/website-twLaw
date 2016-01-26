@@ -15,6 +15,8 @@ MongoClient.connect(config.dburl, function(err, database) {
 var app = express();
 app.listen(config.port, config.hostname);
 
+app.locals.pageTitle = config.siteName;
+
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
 
@@ -22,7 +24,6 @@ app.use(express.static(__dirname + '/public'));
 app.use('/raw/json', express.static(config.dataDir + 'json'));
 
 app.use(function(req, res, next) {
-	delete config.pageTitle;
 	config.counter++;
 	next();
 });

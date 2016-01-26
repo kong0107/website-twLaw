@@ -1,12 +1,16 @@
 var strwidth = require('./strwidth.js');
+var cpi = require('chinese-parseint');
+
+var debug = require('debug')(__filename.substr(__dirname.length + 1));
 var parser = {};
 
-parser.parseHistory = function(str) {
+function parseHistory(str) {
 	return str.split(/\r\n\d+\./).map(function(str, index) {
 		if(!index) str = str.substr(2);
 		return str.replace(/\s+/g, '').replace(/([\w\-、～]+)(?![）\w])/g, " $1 ");
 	});
-};
+}
+parser.parseHistory = parseHistory;
 
 /**
  * 將「法規內容」節點的陣列傳入，視每個節點是「編章節」或「條文」而做相應轉換。
@@ -15,18 +19,34 @@ parser.parseHistory = function(str) {
  * 「公共藝術設置辦法」在第一條之前有一個空白的「編章節」。
  * 「建築技術規則建築設計施工編」有數個歷史版本的第11至13條沒有內容（連「（刪除）」都沒有）。
  */
-parser.parseLawContent = function(lawContent) {
+function parseLawContent(lawContent) {
 	return lawContent.map(function(ele) {
 		if(ele.編章節 !== undefined) {
-			return {division: ele.編章節};
+			debug(ele.編章節);
+			return parseOrdinal(ele.編章節);
 		}
 		else {
-			var article = {number: ele.條號};
-			if(ele.條文內容) articl.content = parser.parseArticle(ele.條文內容);
+			debug(ele.條號);
+			var article = parseOrdinal(ele.條號);
+			if(ele.條文內容) article.content = parseArticle(ele.條文內容);
 			return article;
 		}
 	});
-};
+}
+parser.parseLawContent = parseLawContent;
+
+function parseOrdinal(str) {
+	var match = str.match(/^第\s*([\d零一二三四五六七八九十百千]+)\s*(-(\d+))?\s*([條項編章節款目]|小目)(\s*之\s*([\d零一二三四五六七八九十百千]+))?\s*/);
+	if(!match) return {};
+	var result = {
+		type: match[4],
+		number: cpi(match[1]) * 100 + cpi(match[3] || match[6] || 0)
+	};
+	var title = str.substr(match[0].length).trim();
+	if(title) result.title = title;
+	return result;
+}
+parser.parseOrdinal = parseOrdinal;
 
 /**
  * 將條文內容字串，轉為巢狀結構
@@ -37,7 +57,7 @@ parser.parseLawContent = function(lawContent) {
  * @param {string} str 以換行做為排版的條文內容字串。
  * @return {object} 物件有成員 `stratum`, `texts`, `children`, `posttexts`，各自意義見程式碼最後步驟的註解說明。
  */
-parser.parseArticle = function(str) {
+function parseArticle(str) {
 	var result = {children: []};
 
 	/// Step 1: 把同屬於一元素的各行重新組起來，但保留最初的空白字元。使 `eles` 每個元素有成員：
@@ -100,6 +120,16 @@ parser.parseArticle = function(str) {
 			for(var j = i - 1; j >= 0; --j)
 				if(eles[j].stratum >= 0 && eles[i].spaces == eles[j].spaces) break;
 
+			if(j < 0) {
+				debug('Not found previous paragraph of:', eles[j]);
+				for(var j = i - 1; j >= 0; --j)
+					if(eles[j].stratum >= 0) break;
+				if(j < 0) {
+					debug('Not even an acceptable paragraph!?');
+					j = i - 1;
+				}
+				else debug('inserted into some paragraph');
+			}
 			if(eles[j].children) {
 				if(!eles[j].posttexts) eles[j].posttexts = [];
 				eles[j].posttexts.push(eles[i]);
@@ -123,10 +153,12 @@ parser.parseArticle = function(str) {
 
 		/// 將 text 和 siblings 合併為 texts 。
 		eles[i].texts = [eles[i].text];
-		if(eles[i].siblings)
+		if(eles[i].siblings) {
 			eles[i].siblings.forEach(function(sib) {
 				eles[i].texts.push(sib.text);
 			});
+			debug("siblings of:", eles[i].text);
+		}
 		delete eles[i].text;
 		delete eles[i].siblings;
 
@@ -139,6 +171,7 @@ parser.parseArticle = function(str) {
 
 		/// 把 posttexts 改成字串陣列，然後排到 children 後面。
 		if(eles[i].posttexts) {
+			debug("posttexts of:", eles[i].texts[0]);
 			temp = eles[i].posttexts.map(function(obj) {return obj.text;});
 			delete eles[i].posttexts;
 			eles[i].posttexts = temp;
@@ -146,11 +179,12 @@ parser.parseArticle = function(str) {
 	}
 
 	return result;
-};
+}
+parser.parseArticle = parseArticle;
 
 var stratums = [
     {	"name": "paragraphs",       ///< 用於CSS
-        "ordinal": /^(?![ 「])/   ///< 引號出現在憲法第48條
+        "ordinal": /^(?! )/   ///< 開頭沒有空格。引號出現在憲法第48條
     },
     {	"name": "categories",
         "ordinal": /^第[一二三四五六七八九十]+類：/

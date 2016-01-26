@@ -33,10 +33,11 @@ router.get('/law/:name?', function(req, res) {
 					return;
 				}
 				doc.history = parser.parseHistory(doc.沿革內容);
-				doc.法規內容.forEach(function(article) {
+				doc.content = parser.parseLawContent(doc.法規內容);
+				/*doc.法規內容.forEach(function(article) {
 					if(article.條文內容)
 						article.content = parser.parseArticle(article.條文內容);
-				});
+				});*/
 				res.jsonp(doc);
 			}
 		);

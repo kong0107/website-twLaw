@@ -6,7 +6,27 @@ parser.parseHistory = function(str) {
 		if(!index) str = str.substr(2);
 		return str.replace(/\s+/g, '').replace(/([\w\-、～]+)(?![）\w])/g, " $1 ");
 	});
-}
+};
+
+/**
+ * 將「法規內容」節點的陣列傳入，視每個節點是「編章節」或「條文」而做相應轉換。
+ *
+ * 注意：
+ * 「公共藝術設置辦法」在第一條之前有一個空白的「編章節」。
+ * 「建築技術規則建築設計施工編」有數個歷史版本的第11至13條沒有內容（連「（刪除）」都沒有）。
+ */
+parser.parseLawContent = function(lawContent) {
+	return lawContent.map(function(ele) {
+		if(ele.編章節 !== undefined) {
+			return {division: ele.編章節};
+		}
+		else {
+			var article = {number: ele.條號};
+			if(ele.條文內容) articl.content = parser.parseArticle(ele.條文內容);
+			return article;
+		}
+	});
+};
 
 /**
  * 將條文內容字串，轉為巢狀結構
@@ -148,6 +168,5 @@ var stratums = [
         "ordinal": /^\s+（\d+）/   ///< 全形括號（與立法院不同）、半形數字
     }
 ];
-
 
 module.exports = parser;

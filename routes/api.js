@@ -1,5 +1,6 @@
 var config = require('../config.js');
 var express = require('express');
+var parser = require('../libs/parser.js');
 
 var router = module.exports = express.Router();
 var model = { config: config };
@@ -31,6 +32,11 @@ router.get('/law/:name?', function(req, res) {
 					res.jsonp({error: 1, message: '資料庫中無此法規'});
 					return;
 				}
+				doc.history = parser.parseHistory(doc.沿革內容);
+				doc.法規內容.forEach(function(article) {
+					if(article.條文內容)
+						article.content = parser.parseArticle(article.條文內容);
+				});
 				res.jsonp(doc);
 			}
 		);

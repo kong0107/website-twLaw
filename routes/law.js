@@ -28,11 +28,10 @@ router.get('/:name?', function(req, res, next) {
 				if(err || !doc) return next();
 				config.pageTitle = doc.法規名稱;
 				doc.沿革內容 = parser.parseHistory(doc.沿革內容);
-				for(var i = 0; i < doc.法規內容.length; ++i) {
-					var article = doc.法規內容[i];
+				doc.法規內容.forEach(function(article) {
 					if(article.條文內容) 
 						article.content = parser.parseArticle(article.條文內容);
-				}
+				});
 				
 				model.law = doc;
 				res.render('law', model);

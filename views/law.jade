@@ -1,18 +1,17 @@
 extends layout
 
+- var counter = 0;
 mixin articleContent(content)
-	if content.text
-		p= content.text	
-	if content.siblings
-		each sib in content.siblings
-			p= sib.text
+	if content.texts
+		each para in content.texts
+			p(class=(counter++ % 2) ? 'odd' : 'even')= para
 	if content.children
 		ol(class={article: content.stratum === undefined})
 			each child in content.children
 				li: +articleContent(child)
 	if content.posttexts
-		each post in content.posttexts
-			p= post.text
+		each para in content.posttexts
+			p(class=(counter++ % 2) ? 'odd' : 'even')= para
 
 block content
 	h1(class=law.廢止註記 ? 'discard' : '')= law.法規名稱

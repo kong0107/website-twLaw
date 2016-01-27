@@ -2,6 +2,7 @@ var strwidth = require('./strwidth.js');
 var cpi = require('chinese-parseint');
 
 var debug = require('debug')(__filename.substr(__dirname.length + 1));
+var log = require('debug')('parser_log:.js');
 var parser = {};
 
 function parseHistory(str) {
@@ -59,6 +60,40 @@ parser.parseOrdinal = parseOrdinal;
  */
 function parseArticle(str) {
 	var result = {children: []};
+	
+	/// Step 0: 把還不打算處理的先避開。
+	/// 須留意回傳的格式是否與 step 4 相同。
+	/// 未處理「海關進口稅則」
+	if(str.indexOf('＝') >= 0) { ///< 算式。例如「加值型及非加值型營業稅法」§15-1
+		debug('equation');
+		return {
+			warning: 'equation',
+			children: [{texts: [str]}]
+		};
+	}
+	else if(str.indexOf('──') >= 0) { ///< 表格，如「考試院檔案申請閱覽規則」§2
+		debug('table');
+		return {
+			warning: 'table',
+			children: [{texts: [str]}]
+		};
+	}
+	else if(str.indexOf('\n\n') >= 0) { ///< 如「使用中汽車召回改正辦法」§19
+		debug('continuous newlines');
+		return {
+			warning: 'continuous newlines',
+			children: [{texts: [str]}]
+		}
+	}
+	else if(/\s{15,}/.test(str)) { 
+		// 空格排版，如「考試院檔案申請閱覽規則」§5 。
+		// 連續空格的允許上限為14，如所得稅法14條1項9類1款各目。
+		debug('too many spaces');
+		return {
+			warning: 'too many spaces',
+			children: [{texts: [str]}]
+		}
+	}
 
 	/// Step 1: 把同屬於一元素的各行重新組起來，但保留最初的空白字元。使 `eles` 每個元素有成員：
 	/// * text {string}: 該段落文字。
@@ -67,9 +102,29 @@ function parseArticle(str) {
 	var isNew = true;
 	for(var i = 0; i < lines.length; ++i) {
 		var trimmed = lines[i].trim();
-		if(isNew && trimmed.charAt(0) != '但') eles.push({text: lines[i]}); ///< 例如民法第95條
+		if(!eles.length	//< 如果這是第一行，或
+			|| (isNew	//< 前一行看起來已經結束
+				&& trimmed.charAt(0) != '但'	//< 且開頭不是「但」，如民法第95條。
+				&& !/^\([^\d一二三四五六七八九十甲乙丙丁戊己庚辛壬癸]/.test(trimmed)
+			)
+			//< 而且這一行開頭不是：
+			//< * "(附"，如職業介紹法§43
+			//< * "(備"，如福建金門馬祖地區司法人員定期調動辦法§3、調度司法警察條例§14
+			//< * "(其"，如中央政府附屬單位預算執行辦法§33
+		) {	// 那就把這行當作新的一行。
+			var newEle = {text: lines[i]};
+			if(i > 0 && strwidth(lines[i - 1]) == 64) {
+				debug('未能確認是否分項');
+				newEle.warning = 'unsure of new paragraph';
+			}
+			eles.push(newEle);
+			
+			if(trimmed.charAt(0) === '「') debug('首字為引號');
+		}
+		//else if(!eles.length) debug('第一行就有問題！？');
 		else eles[eles.length - 1].text += trimmed;
-		isNew = /(：|︰|。|（刪除）)$/.exec(trimmed);
+		
+		isNew = /(：|︰|。、?|（刪除）)$/.test(trimmed); //< 句號後的頓號出現在「行政院主計處電子處理資料中心辦事細則」
 	}
 
 	/// Step 2: 確認各元素屬於哪一種「類項款目」。使 `eles` 每個元素有成員：
@@ -183,22 +238,30 @@ function parseArticle(str) {
 parser.parseArticle = parseArticle;
 
 var stratums = [
-    {	"name": "paragraphs",       ///< 用於CSS
-        "ordinal": /^(?! )/   ///< 開頭沒有空格。引號出現在憲法第48條
+    {	"name": "paragraph",       ///< 可用於CSS
+        "ordinal": /^(?! )/   ///< 開頭沒有空格。但憲法第48條怎麼辦？
     },
-    {	"name": "categories",
+    {	"name": "categorie",
         "ordinal": /^第[一二三四五六七八九十]+類：/
     },
-    {	"name": "subparagraphs",
+    {	"name": "subparagraph",
         "ordinal": /^\s*[○一二三四五六七八九十]+(、|　|  )/  ///< 憲法裡的「款」有時是全形空格，有時是兩個半形空格
     },
-    {	"name": "items",
-        "ordinal": /^\s*[\(（][一二三四五六七八九十]+[\)）]/    ///< 有些括號是全形，有些是半形（如所得稅法25條2項2款）
+	{	"name": "celestial-subparagraph",
+		"ordinal": /^\s*[甲乙丙丁戊己庚辛壬癸]、/ ///< 海上捕獲條例第25條
+	},
+    {	"name": "item",
+        "ordinal": /^\s*[\(（][一二三四五六七八九十]+[\)）] ?/    ///< 有些括號是全形，有些是半形（如所得稅法25條2項2款）
     },
-    {	"name": "subitems",
-        "ordinal": /^\s+\d+\./
+    {	"name": "celestrial-item",
+        "ordinal": /^\s*\([甲乙丙丁戊己庚辛壬癸]\) /    ///< 美援進口器材及美援衍生之新臺幣所購器材使用及移轉辦法§8
     },
-    {	"name": "subsubitems",
+    {	"name": "subitem",
+        "ordinal": /^\s+(\d+[\. ]|[０１２３４５６７８９]+、)/	
+		///< 空格情形如「中華民國八十八年下半年及八十九年度中央政府總預算附屬單位預算編製辦法」第7條
+		///< 全形數字如「中華民國九十四年度中央政府總預算附屬單位預算編製辦法」第7條
+    },
+    {	"name": "subsubitem",
         "ordinal": /^\s+（\d+）/   ///< 全形括號（與立法院不同）、半形數字
     }
 ];

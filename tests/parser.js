@@ -27,6 +27,6 @@ mongodb.MongoClient.connect(config.dburl, function(err, database) {
 	db.collection('latest').find().forEach(function(doc) {
 		debug(doc.PCode + ' ' + doc.法規名稱);
 		parser.parseLawContent(doc.法規內容);
-		debug('--------------------------');
+		//debug('--------------------------');
 	}, function() {db.close();});
 });

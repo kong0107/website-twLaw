@@ -23,11 +23,11 @@ parser.parseHistory = parseHistory;
 function parseLawContent(lawContent) {
 	return lawContent.map(function(ele) {
 		if(ele.編章節 !== undefined) {
-			debug(ele.編章節);
+			//log(ele.編章節);
 			return parseOrdinal(ele.編章節);
 		}
 		else {
-			debug(ele.條號);
+			//log(ele.條號);
 			var article = parseOrdinal(ele.條號);
 			if(ele.條文內容) article.content = parseArticle(ele.條文內容);
 			return article;
@@ -60,7 +60,7 @@ parser.parseOrdinal = parseOrdinal;
  */
 function parseArticle(str) {
 	var result = {children: []};
-	
+
 	/// Step 0: 把還不打算處理的先避開。
 	/// 須留意回傳的格式是否與 step 4 相同。
 	/// 未處理「海關進口稅則」
@@ -78,21 +78,23 @@ function parseArticle(str) {
 			children: [{texts: [str]}]
 		};
 	}
-	else if(str.indexOf('\n\n') >= 0) { ///< 如「使用中汽車召回改正辦法」§19
+	else if(str.indexOf('\r\n\r\n') >= 0) { ///< 如「使用中汽車召回改正辦法」§19
 		debug('continuous newlines');
 		return {
 			warning: 'continuous newlines',
 			children: [{texts: [str]}]
 		}
 	}
-	else if(/\s{15,}/.test(str)) { 
+	else if(/[\x20\u3000]{15,}(?=[^\s$])/.test(str)) {
 		// 空格排版，如「考試院檔案申請閱覽規則」§5 。
 		// 連續空格的允許上限為14，如所得稅法14條1項9類1款各目。
+		// 但若是結尾的連續空白就不用理了，如交通技術人員執業證書核發規則§2
+		// 注意 \s 會對應到換行字元，而這裡還沒有 str.split('\n') ，所以才會前面用 [\x20\u3000] ，而後面需要 [^\s$] 。
 		debug('too many spaces');
 		return {
 			warning: 'too many spaces',
 			children: [{texts: [str]}]
-		}
+		};
 	}
 
 	/// Step 1: 把同屬於一元素的各行重新組起來，但保留最初的空白字元。使 `eles` 每個元素有成員：
@@ -102,6 +104,8 @@ function parseArticle(str) {
 	var isNew = true;
 	for(var i = 0; i < lines.length; ++i) {
 		var trimmed = lines[i].trim();
+		for(var j = stratums.length - 1; j >= 0; --j)
+			if(stratums[j].ordinal.test(lines[i])) break;
 		if(!eles.length	//< 如果這是第一行，或
 			|| (isNew	//< 前一行看起來已經結束
 				&& trimmed.charAt(0) != '但'	//< 且開頭不是「但」，如民法第95條。
@@ -113,17 +117,19 @@ function parseArticle(str) {
 			//< * "(其"，如中央政府附屬單位預算執行辦法§33
 		) {	// 那就把這行當作新的一行。
 			var newEle = {text: lines[i]};
-			if(i > 0 && strwidth(lines[i - 1]) == 64) {
+			if(i > 0 && lines[i - 1].length == 32 && strwidth(lines[i - 1]) == 64
+				&& j == 0
+			) {
 				debug('未能確認是否分項');
 				newEle.warning = 'unsure of new paragraph';
 			}
 			eles.push(newEle);
-			
+
 			if(trimmed.charAt(0) === '「') debug('首字為引號');
 		}
 		//else if(!eles.length) debug('第一行就有問題！？');
 		else eles[eles.length - 1].text += trimmed;
-		
+
 		isNew = /(：|︰|。、?|（刪除）)$/.test(trimmed); //< 句號後的頓號出現在「行政院主計處電子處理資料中心辦事細則」
 	}
 
@@ -245,6 +251,9 @@ var stratums = [
         "ordinal": /^第[一二三四五六七八九十]+類：/
     },
     {	"name": "subparagraph",
+        "ordinal": /^\s*[零壹貳參肆伍陸柒捌玖拾]+\s+/  ///< H0070027 中華民國中小學科學展覽會參展安全規則
+    },
+    {	"name": "subparagraph",
         "ordinal": /^\s*[○一二三四五六七八九十]+(、|　|  )/  ///< 憲法裡的「款」有時是全形空格，有時是兩個半形空格
     },
 	{	"name": "celestial-subparagraph",
@@ -257,12 +266,15 @@ var stratums = [
         "ordinal": /^\s*\([甲乙丙丁戊己庚辛壬癸]\) /    ///< 美援進口器材及美援衍生之新臺幣所購器材使用及移轉辦法§8
     },
     {	"name": "subitem",
-        "ordinal": /^\s+(\d+[\. ]|[０１２３４５６７８９]+、)/	
+        "ordinal": /^\s+(\d+[\. ]|[０１２３４５６７８９]+、)/
 		///< 空格情形如「中華民國八十八年下半年及八十九年度中央政府總預算附屬單位預算編製辦法」第7條
 		///< 全形數字如「中華民國九十四年度中央政府總預算附屬單位預算編製辦法」第7條
     },
     {	"name": "subsubitem",
-        "ordinal": /^\s+（\d+）/   ///< 全形括號（與立法院不同）、半形數字
+        "ordinal": /^\s+[\(（]\d+[\)）] ?/	///< 通常是全形括號、後無空格，例外見 J0030002 「食品工廠建築及設備之設置標準」§15
+    },
+    {	"name": "subsubsubitem",
+        "ordinal": /^\s+[\uf6b1-\uf6b9]/   ///< 食品工廠建築及設備之設置標準§15
     }
 ];
 

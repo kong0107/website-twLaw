@@ -1,53 +1,121 @@
-var strwidth = require('./strwidth.js');
+var util = require('util');
 var cpi = require('chinese-parseint');
+var strwidth = require('./strwidth.js');
 
 var debug = require('debug')(__filename.substr(__dirname.length + 1));
-var log = require('debug')('parser_log:.js');
-var parser = {};
 
+/**
+ * Parse a law object to another object.
+ *
+ * @param {object} law An object parsed from JSON file; not being chaged in this function.
+ * @param {object} [options=null] Optional settings.
+ * @param {boolean} [options.details=false] Returns stratum and space information in content.
+ * @return {object} returns Law object
+ */
+function parseLaw(law, options) {
+	var value;
+	var result = {
+		PCode:			law.PCode,
+		characteristic:	law.法規性質,
+		name:			law.法規名稱,
+		category: 		law.法規類別.split('＞'),
+		lastUpdate:		parseDate(law.最新異動日期),
+		
+		discarded:		!!law.廢止註記,
+		translated:		law.是否英譯註記 === 'Y',
+		history:		parseHistory(law.沿革內容),
+		content:		parseLawContent(law.法規內容, options)
+	};
+	
+	if(value = law.生效日期) result.effectiveDate = parseDate(value);
+	if(value = law.生效內容) result.effectiveContent = value.replace(/\r\n/g, '');
+	if(value = law.英文法規名稱) result.english = value;
+	
+	return result;
+}
+
+/**
+ * 將日期從 'YYYYmmdd' 轉為 'YYYY-mm-dd' 。
+ */
+function parseDate(str) {
+	str = str.toString();
+	return str.substr(0, 4) + '-' + str.substr(4, 2) + '-' + str.substr(6);
+}
+
+/**
+ * 將「沿革內容」轉為每個項目為一元素的陣列。
+ */
 function parseHistory(str) {
 	return str.split(/\r\n\d+\./).map(function(str, index) {
 		if(!index) str = str.substr(2);
 		return str.replace(/\s+/g, '').replace(/([\w\-、～]+)(?![）\w])/g, " $1 ");
 	});
 }
-parser.parseHistory = parseHistory;
 
 /**
- * 將「法規內容」節點的陣列傳入，視每個節點是「編章節」或「條文」而做相應轉換。
+ * 轉換「法規內容」。
  *
- * 注意：
- * 「公共藝術設置辦法」在第一條之前有一個空白的「編章節」。
- * 「建築技術規則建築設計施工編」有數個歷史版本的第11至13條沒有內容（連「（刪除）」都沒有）。
+ * * H0170012 「公共藝術設置辦法」在第一條之前有一個空白的「編章節」。
+ * * D0070115 「建築技術規則建築設計施工編」有數個歷史版本的第11至13條沒有內容（連「（刪除）」都沒有）。
  */
-function parseLawContent(lawContent) {
+function parseLawContent(lawContent, options) {
 	return lawContent.map(function(ele) {
-		if(ele.編章節 !== undefined) {
-			//log(ele.編章節);
-			return parseOrdinal(ele.編章節);
-		}
+		if(ele.編章節 !== undefined) return parseOrdinal(ele.編章節);
 		else {
-			//log(ele.條號);
 			var article = parseOrdinal(ele.條號);
-			if(ele.條文內容) article.content = parseArticle(ele.條文內容);
+			if(ele.條文內容) article.content = parseArticleContent(ele.條文內容);
 			return article;
 		}
 	});
 }
-parser.parseLawContent = parseLawContent;
 
+/**
+ * 轉換「條號」與「編章節」。
+ * @return {object} returns An object has property `type`, `number`, and maybe `title`.
+ */
 function parseOrdinal(str) {
-	var match = str.match(/^第\s*([\d零一二三四五六七八九十百千]+)\s*(-(\d+))?\s*([條項編章節款目]|小目)(\s*之\s*([\d零一二三四五六七八九十百千]+))?\s*/);
+	if(!str) return {};	// H0170012 「公共藝術設置辦法」在第一條之前有一個空白的「編章節」。
+	var match = str.match(/^第?\s*([\d零一二三四五六七八九十百千]+)\s*(-(\d+))?\s*([條項編章節款目]|小目)?(\s*之\s*([\d零一二三四五六七八九十百千]+))?\s*/);
 	if(!match) return {};
-	var result = {
-		type: match[4],
-		number: cpi(match[1]) * 100 + cpi(match[3] || match[6] || 0)
-	};
+	var result = {number: cpi(match[1]) * 100 + cpi(match[3] || match[6] || 0)};
+	if(match[4]) result.type = match[4];
 	var title = str.substr(match[0].length).trim();
 	if(title) result.title = title;
 	return result;
 }
-parser.parseOrdinal = parseOrdinal;
+
+/**
+ * 條文內容的巢狀結構元素節點。
+ * @typedef {Object} articleContentElement
+ * @property {?string} warning 條文內容不如程式預期時，會有警告文字，用以提示使用者轉換結果可能不正確，或是沒有轉換。
+ * @property {?number} stratum 提示本元素是「項」、「款」、「目」還是其他。
+ * @property {?number} spaces 提示本元素若需換行，第二行後宜縮排幾個半形空白。
+ * @property {string} text 本文，如果有分段的情形則會有換行字元（如所得稅法第4條第1項第16款、第22款、第14條第1項第1類、第2類、第4類第3款）。
+ * @property {articleContentElement[]} children 子項目們，例如某「項」之中的各個分「款」。
+ * @property {string} posttext 後文，用於顯示「（附件…」，以及如所得稅法14條1項9類1款各目之後的那段文字。
+ */
+
+/**
+ * 將「條文內容」字串轉為巢狀結構。
+ *
+ * 未支援國際法的中譯版，例如「維也納條約法公約」第7條第1項（甲）款末尾是「；或」。
+ * @return {articleContentElement[]}
+ */
+function parseArticleContent(str, options) {
+	//-----------------------------------------------------------------------------------------------
+}
+
+module.exports = {
+	parseLaw: parseLaw,
+	parseHistory: parseHistory,
+	parseLawContent: parseLawContent,
+	parseOrdinal: parseOrdinal,
+	parseArticleContent: parseArticleContent
+};
+
+
+//-----------------------------------------------------------------------------------------------
+
 
 /**
  * 將條文內容字串，轉為巢狀結構
@@ -241,7 +309,7 @@ function parseArticle(str) {
 
 	return result;
 }
-parser.parseArticle = parseArticle;
+module.exports.parseArticle = parseArticle;
 
 var stratums = [
     {	"name": "paragraph",       ///< 可用於CSS
@@ -277,5 +345,3 @@ var stratums = [
         "ordinal": /^\s+[\uf6b1-\uf6b9]/   ///< 食品工廠建築及設備之設置標準§15
     }
 ];
-
-module.exports = parser;

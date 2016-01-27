@@ -18,13 +18,21 @@ var text = "個人之綜合所得總額，以其全年下列各類所得合併�
 
 
 var mongodb = require('mongodb');
-
 mongodb.MongoClient.connect(config.dburl, function(err, database) {
 	if(err) throw err;
 	debug('Connected to the database.');
 	var db = config.db = database;
+	var coll = db.collection('latest');
 
-	db.collection('latest').find().forEach(function(doc) {
+	if(true) coll.findOne({PCode: 'A0000001'}, function(err, doc) {
+		console.log(doc.PCode);
+		console.log(doc.法規名稱);
+		console.log(JSON.stringify(parser.parseLawContent(doc.法規內容), null, 4));
+		db.close();
+	})
+
+
+	if(false) coll.find().forEach(function(doc) {
 		debug(doc.PCode + ' ' + doc.法規名稱);
 		parser.parseLawContent(doc.法規內容);
 		//debug('--------------------------');

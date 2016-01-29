@@ -25,13 +25,15 @@ block content
 				dt 狀態
 				dd.em 已廢止
 
+	h2: a(name='history') 沿革
+	ol.history
+		each amend in law.history
+			li= amend
+
 	if law.hasDivisions
 		section.toc
 			a(name='toc')
-			each article in law.content
-				if article.divDepth
-					div(class=article.type)
-						a(href='#'+article.type+article.number) 第 #{article.numberString} #{article.type} #{article.title}
+			+tableOfContents(law.tableOfContents)
 
 	section.lawContent
 		h2: a(name='content') 法規內容
@@ -43,14 +45,32 @@ block content
 		each article in law.content
 			article
 				- var type = article.type || '條';
+				-
+					var ref = (type == '條')
+						? ('art_' + article.number)
+						: ('div_' + article.trace.join('_'))
+					;
 				.ordinal(class=type)
-					a(name=type+article.number)
+					a(name=ref)
 						| 第 #{article.numberString} #{type}
 						if article.title
 							span.title= article.title
 				if article.content
 					+articleContent(article.content)
 
+mixin tableOfContents(toc)
+	ol
+		each node in toc
+			li
+				a(href='#div_'+node.trace.join('_'))
+					| 第 #{node.numberString} #{node.type} #{node.title}
+				span.range
+					| §
+					+numberString(node.range[0])
+					| ~§
+					+numberString(node.range[1])
+				if node.children
+					+tableOfContents(node.children)
 
 mixin articleContent(artCon, spaces)
 	- var style = (spaces === undefined) ? '' : ('padding-left: ' + (spaces / 2) + 'em;');
@@ -72,3 +92,8 @@ mixin paragraph(text, paddingLeft, textIndent)
 	- paddingLeft = paddingLeft ? ('padding-left: ' + (paddingLeft / 2) + 'em;') : '';
 	- textIndent = textIndent ? ('text-indent: ' + (textIndent / 2) + 'em;') : '';
 	p(style=paddingLeft+textIndent)!= text
+
+mixin numberString(number)
+	- var main = number.toString ? number.toString().slice(0, -2) : 'NaN';
+	- var sub = number % 100;
+	| #{main}#{sub ? ('-' + sub) : ''}

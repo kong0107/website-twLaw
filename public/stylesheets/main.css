@@ -106,9 +106,19 @@ nav .inlineList li:last-of-type {
 	background-color: #000;
 	padding: .5em;
 }
-.toc div {
-	padding-right: 2em;
-	margin-right: 2em;
+.toc ol {
+	list-style-type: none;
+	padding-left: 0em;
+}
+.toc .range {
+	font-size: small;
+	color: #ccc;
+	padding-left: .5em;
+}
+
+.toc li {
+	padding: .15em 0 .15em 1em;
+	text-indent: -1em;
 }
 
 .history {
@@ -169,7 +179,18 @@ nav .inlineList li:last-of-type {
 .條 + ol > li:only-child { list-style-type: disc; }
 .條 + ol ol { list-style-type: none; }
 
-article .warning { font-size: smaller; }
+article .warning {
+	line-height: 0;
+	font-size: 0;
+	color: transparent;
+}
+article .warning::after {
+	content: '（警告：未能確認是否分項）';
+	font-size: small;
+	line-height: 100%;
+	color: #fff;
+	font-style: italic;
+}
 
 
 

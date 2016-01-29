@@ -39,6 +39,8 @@ function parseLaw(law, options) {
 		})
 	}
 
+	result.tableOfContents = makeTree(result.content);
+
 	return result;
 }
 
@@ -83,16 +85,18 @@ function parseLawContent(lawContent, options) {
  */
 function parseOrdinal(str, options) {
 	if(!str) return {};	// H0170012 「公共藝術設置辦法」在第一條之前有一個空白的「編章節」。
-	var match = str.match(/^第?\s*([\d零一二三四五六七八九十百千]+)\s*(-(\d+))?\s*([條項編章節款目]|小目)?(\s*之\s*([\d零一二三四五六七八九十百千]+))?\s*/);
+	var match = str.match(/^第?([\d零一二三四五六七八九十百千\s]+)(-(\d+))?\s*([條項編章節款目]|小目)?(\s*之\s*([\d零一二三四五六七八九十百千]+))?\s*/);
 	if(!match) return {warning: '偵測不到條號', title: str};
-	var main = cpi(match[1]);
+	var main = cpi(match[1].replace(/\s/g, ''));	//< 「電業供電線路裝置規則」有個「第 十 四章」
 	var sub = cpi(match[3] || match[6] || 0);
-	var result = {number: cpi(match[1]) * 100 + sub};
-	if(options.details) result.numberString = main + (sub ? ('-' + sub) : '');
+	var result = {};
+
 	if(match[4]) {
 		result.type = match[4];
 		if(options.details) result.divDepth = "條編章節款目".indexOf(result.type);
 	}
+	result.number = cpi(match[1]) * 100 + sub;
+	if(options.details) result.numberString = main + (sub ? ('-' + sub) : '');
 	var title = str.substr(match[0].length).trim();
 	if(title) result.title = title;
 	return result;
@@ -245,6 +249,78 @@ function parseArticleContent(str, options) {
 		delete elem.spaces;
 	});
 
+	return tree.children;
+}
+
+function makeTree(content, options) {
+	if(typeof content == 'string')
+		content = parseLawContent(content, options);
+	//if(!content[0].type || content[0].type == '條') return [];
+
+	//
+	// 找出各個編章節的開始與結束條號。
+	//
+	var list = []; //< 僅包含編章節節點的陣列。
+	var trace = [0, 0, 0, 0, 0]; //< 用於表達這是第幾編、第幾章的第幾節。
+	var flags = [null];	//< 紀錄前一個第 i 層的編章節。
+	content.forEach(function(node, index) {
+		var types = "編章節款目";
+		var stratum = types.indexOf(node.type);
+		if(stratum < 0) {
+			// 例如遇到第一條時，要把第一編、第一章、第一節這些節點的開始條號均記為 100 。
+			for(var i = index - 1; i >= 0; --i) {
+				if(types.indexOf(content[i].type) < 0) break;
+				content[i].range = [node.number];
+			}
+		}
+		else {
+			trace[stratum] = node.number;
+			for(var i = stratum + 1; i < trace.length; ++i) trace[i] = 0;
+			node.trace = [];
+			for(var i = 0; i <= stratum; ++i) node.trace.push(trace[i]);
+			list.push(node);
+
+			if(node.number > 100) {
+				var endNum = content[index - 1].number;
+				for(var i = stratum; i < flags.length; ++i) {
+					if(!flags[i]) break;
+					flags[i].range.push(endNum);
+					flags[i] = null;
+				}
+			}
+			flags[stratum] = node;
+		}
+	});
+	var lastNum = content[content.length - 1].number;
+	for(var i = 0; i < flags.length; ++i) {
+		if(i && !flags[i]) break;
+		if(flags[i]) flags[i].range.push(lastNum);
+	}
+
+	//
+	// 建一棵樹
+	//
+	// 為避免輸出 JSON 時丟出太多東西，先複製一些物件（注意這只是便宜行事的複製方式）
+	var listCopy = list.map(function(node) {
+		var result = {};
+		for(var i in node) result[i] = node[i];
+		return result;
+	});
+	var tree = {children: []};
+	listCopy.forEach(function(node, index) {
+		if(!index) {
+			tree.children.push(node);
+			return;
+		}
+		for(var i = index - 1; i >= 0; --i) {
+			if(listCopy[i].trace.length < node.trace.length) {
+				if(!listCopy[i].children) listCopy[i].children = [];
+				listCopy[i].children.push(node);
+				return;
+			}
+		}
+		tree.children.push(node);
+	});
 	return tree.children;
 }
 

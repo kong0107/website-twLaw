@@ -24,10 +24,10 @@ mongodb.MongoClient.connect(config.dburl, function(err, database) {
 	var db = config.db = database;
 	var coll = db.collection('latest');
 
-	if(true) coll.findOne({PCode: 'A0000001'}, function(err, doc) {
+	if(true) coll.findOne({PCode: 'G0340003'}, function(err, doc) {
 		console.log(doc.PCode);
 		console.log(doc.法規名稱);
-		console.log(JSON.stringify(parser.parseLawContent(doc.法規內容), null, 4));
+		console.log(JSON.stringify(parser.parseLawContent(doc.法規內容, {details: true}), null, 4));
 		db.close();
 	})
 

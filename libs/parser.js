@@ -20,17 +20,17 @@ function parseLaw(law, options) {
 		name:			law.法規名稱,
 		category: 		law.法規類別.split('＞'),
 		lastUpdate:		parseDate(law.最新異動日期),
-		
+
 		discarded:		!!law.廢止註記,
 		translated:		law.是否英譯註記 === 'Y',
 		history:		parseHistory(law.沿革內容),
 		content:		parseLawContent(law.法規內容, options)
 	};
-	
+
 	if(value = law.生效日期) result.effectiveDate = parseDate(value);
 	if(value = law.生效內容) result.effectiveContent = value.replace(/\r\n/g, '');
 	if(value = law.英文法規名稱) result.english = value;
-	
+
 	return result;
 }
 
@@ -87,9 +87,9 @@ function parseOrdinal(str) {
 /**
  * 條文內容的巢狀結構元素節點。
  * @typedef {Object} articleContentElement
- * @property {?string} warning 條文內容不如程式預期時，會有警告文字，用以提示使用者轉換結果可能不正確，或是沒有轉換。
- * @property {?number} stratum 提示本元素是「項」、「款」、「目」還是其他。
- * @property {?number} spaces 提示本元素若需換行，第二行後宜縮排幾個半形空白。
+ * @property {?string} warning 於條文內容不如程式預期時存在。為警告文字，用以提示使用者轉換結果可能不正確，或是沒有轉換。
+ * @property {?number} stratum 於 options.details 為真時存在，提示本元素是「項」、「款」、「目」還是其他。
+ * @property {?number} spaces 於 options.details 為真時存在，提示本元素若需換行，第二行後宜縮排幾個半形空白。
  * @property {string} text 本文，如果有分段的情形則會有換行字元（如所得稅法第4條第1項第16款、第22款、第14條第1項第1類、第2類、第4類第3款）。
  * @property {articleContentElement[]} children 子項目們，例如某「項」之中的各個分「款」。
  * @property {string} posttext 後文，用於顯示「（附件…」，以及如所得稅法14條1項9類1款各目之後的那段文字。
@@ -102,7 +102,136 @@ function parseOrdinal(str) {
  * @return {articleContentElement[]}
  */
 function parseArticleContent(str, options) {
-	//-----------------------------------------------------------------------------------------------
+	if(!options) options = {};
+	
+	//
+	// 把不打算處理的直接回傳。
+	//
+	var warning;
+
+	// 如「加值型及非加值型營業稅法」§15-1
+	if(str.indexOf('＝') != -1) warning = '偵測到算式';
+
+	// 如「考試院檔案申請閱覽規則」§2
+	if(str.indexOf('──') != -1) warning = '偵測到表格';
+
+	// 如「使用中汽車召回改正辦法」§19
+	if(str.indexOf('\r\n\r\n') != -1) warning = '偵測到連續換行';
+
+	// 如「考試院檔案申請閱覽規則」§5 ，
+	// 但不包含「所得稅法」14條1項9類1款各目，以及「交通技術人員執業證書核發規則」§2 。
+	if(/[\x20\u3000]{15,}(?=[^\s$])/.test(str)) warning = '偵測到空格排版';
+
+	if(warning) {
+		var elem = {
+			warning: warning,
+			text: str
+		};
+		if(options.details) {
+			elem.stratum = -1;
+			elem.spaces = 0;
+		}
+		return [elem];
+	}
+
+	// --------------------------------
+	//
+	// 將各行轉換為各項款目。
+	//
+	var elems = [];
+	str.split('\r\n')
+	.map(function(str) {return str.replace(/\s+$/, '');})
+	.forEach(function(line, index, lines) {
+		var trimmed = line.trim();
+		var prevLine = index ? lines[index - 1] : '';
+		var prevElem = index ? elems[elems.length - 1] : null;
+
+		//
+		// Step 1: 先假設這一行是新的項款目，判斷是哪種項款目。
+		//
+		var stratum, spaces, match;
+		for(var s = stratums.length - 1; s >= 0; --s) {
+			match = stratums[s].ordinal.exec(line);
+			if(match) break;
+		}
+		stratum = s;
+		spaces = strwidth(match ? match[0] : line.match(/\s*/)[0]);
+
+		//
+		// Step 2: 參考前一行的結尾，據以判斷這一行是否為新的項款目。
+		//
+		var newElem = {text: trimmed, stratum: stratum, spaces: spaces};
+		if(!index || /（刪除）。?$/.test(prevLine))
+			elems.push(newElem);
+		else if(/[：︰]$/.test(prevLine)) {
+			if(stratum == prevElem.stratum || stratum == -1) //< 如憲法§48
+				prevElem.text += '\n' + line;
+			else if(stratum > prevElem.stratum) 
+				elems.push(newElem);
+			else throw new Error('層級錯誤');
+		}
+		else if(/。、?$/.test(prevLine)) {
+			//< 句號後的頓號出現在「行政院主計處電子處理資料中心辦事細則」
+			if(prevElem.stratum == 0) {
+				if(stratum == 0) {
+					if(strwidth(prevLine) < 64) elems.push(newElem);
+					else if(line.charAt(0) == '但') prevElem.text += trimmed;
+					else {
+						newElem.warning = '未能確認是否分項';
+						elems.push(newElem);
+					}
+				}
+				else if(stratum > 0) elems.push(newElem);
+				else throw Error('層級錯誤');
+			}
+			else elems.push(newElem);
+		}
+		else prevElem.text += trimmed;
+	});
+
+	// --------------------------------
+	//
+	// 把陣列依層級轉換成樹。
+	//
+	var tree = {children: []};
+	var parent = tree;
+	elems.forEach(function(elem, index) {
+		if(!index) {
+			parent.children.push(elem);
+			return;
+		}
+		var e;
+		if(elem.stratum >= 0) {
+			for(e = index - 1; e >= 0; --e) {
+				if(elems[e].stratum >= 0 
+					&& elems[e].stratum < elem.stratum
+				) break;
+			}
+			parent = (e >= 0) ? elems[e] : tree;
+			if(!parent.children) parent.children = [];
+			parent.children.push(elem);
+		}
+		else {
+			for(e = index - 1; e >= 0; --e) {
+				if(elems[e].stratum >= 0
+					&& elems[e].spaces == elem.spaces
+				) break;
+			}
+			if(e < 0) for(e = index - 1; e >= 0; --e)
+				if(elems[e].stratum >= 0) break;
+			parent = elems[e];
+			if(!parent.children) parent.text += '\n' + elem.text;
+			else if(!parent.posttext) parent.posttext = elem.text;
+			else parent.posttext += '\n' + elem.text;
+		}
+	});
+
+	if(!options.details) elems.map(function(elem) {
+		delete elem.stratum;
+		delete elem.spaces;
+	});
+
+	return tree.children;
 }
 
 module.exports = {

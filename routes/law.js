@@ -27,13 +27,13 @@ router.get('/:name?', function(req, res, next) {
 			function(err, doc) {
 				if(err || !doc) return next();
 				res.locals.pageTitle = doc.法規名稱;
-				doc.沿革內容 = parser.parseHistory(doc.沿革內容);
+				model.law = parser.parseLaw(doc, {details: true});
+				/*doc.沿革內容 = parser.parseHistory(doc.沿革內容);
 				doc.法規內容.forEach(function(article) {
 					if(article.條文內容) 
 						article.content = parser.parseArticle(article.條文內容);
 				});
-				
-				model.law = doc;
+				model.law = doc;*/
 				res.render('law', model);
 			}
 		);

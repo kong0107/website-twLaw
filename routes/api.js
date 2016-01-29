@@ -32,13 +32,10 @@ router.get('/law/:name?', function(req, res) {
 					res.jsonp({error: 1, message: '資料庫中無此法規'});
 					return;
 				}
-				doc.history = parser.parseHistory(doc.沿革內容);
+				res.jsonp(parser.parseLaw(doc));
+				/*doc.history = parser.parseHistory(doc.沿革內容);
 				doc.content = parser.parseLawContent(doc.法規內容);
-				/*doc.法規內容.forEach(function(article) {
-					if(article.條文內容)
-						article.content = parser.parseArticle(article.條文內容);
-				});*/
-				res.jsonp(doc);
+				res.jsonp(doc);*/
 			}
 		);
 	}

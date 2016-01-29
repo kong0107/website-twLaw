@@ -1,58 +1,69 @@
 extends layout
 
-- var counter = 0;
-mixin articleContent(content)
-	if content.texts
-		each para in content.texts
-			p= para
-	if content.children
-		ol(class={article: content.stratum === undefined})
-			each child in content.children
-				li: +articleContent(child)
-	if content.posttexts
-		each para in content.posttexts
-			p= para
-
 block content
-	h1(class=law.廢止註記 ? 'discard' : '')= law.法規名稱
+	h1(class=law.discarded ? 'discard' : '')= law.name
 	nav: ul.inlineList
 		li: a(href='/api/law/'+law.PCode, download=law.PCode+'.json') JSON
-		li: a(href=law.法規網址, target='_blank') 全國法規資料庫
+		li: a(href='http://law.moj.gov.tw/LawClass/LawAll.aspx?PCode='+law.PCode, target='_blank') 全國法規資料庫
 	.dlTable
 		dl
 			dt 最新異動日期
-			dd= law.最新異動日期
+			dd= law.lastUpdate
 		dl
 			dt 法規性質
-			dd= law.法規性質
+			dd= law.characteristic
 		dl
 			dt 法規類別
-			dd= law.法規類別
-		if law.英文法規名稱
+			dd= law.category.join(' > ')
+		if law.english
 			dl
 				dt 英文法規名稱
-				dd= law.英文法規名稱
-		if law.廢止註記
+				dd= law.english
+		if law.discarded
 			dl
 				dt 狀態
 				dd.em 已廢止
 
-	h2: a(name='沿革') 沿革
+	h2: a(name='history') 沿革
 	ol.history
-		each amend in law.沿革內容
+		each amend in law.history
 			li= amend
 
 	h2: a(name='法規內容') 法規內容
-	if law.前言
-		.artTitle: a(name='前言') 前言
-		.rawdata= law.前言
-	each article in law.法規內容
-		if article.條號
-			.artTitle: a(name=article.條號)= article.條號
-			+articleContent(article.content)
-			//-.rawdata #{JSON.stringify(article.content, null, '\t')}
-			//-.rawdata= article.條文內容
-		else
-			- var chapterType = article.編章節.charAt(article.編章節.lastIndexOf(" ") -1 )
-			.chapter(class=chapterType)
-				a(name=article.編章節)= article.編章節
+	if law.preamble
+		article
+			.ordinal(class='前言')
+				a(name='前言') 前言
+			p= law.preamble
+	each article in law.content
+		article
+			- var type = article.type || '條';
+			.ordinal(class=type)
+				a(name=type+article.number)
+					- var sub = article.number % 100;
+					| 第 #{article.number.toString().slice(0, -2)}#{sub ? ('-' + sub) : ''} #{type}
+					if article.title
+						span.title= article.title
+			if article.content
+				+articleContent(article.content)
+
+mixin articleContent(artCon, spaces)
+	- var style = (spaces === undefined) ? '' : ('padding-left: ' + (spaces / 2) + 'em;');
+	- var spaces = spaces || 0;
+	ol(style=style)
+		each elem in artCon
+			- var spaceDiff = elem.spaces - spaces;
+			li
+				if elem.warning
+					.warning(title=elem.warning) ？？？？
+				+paragraph(elem.text, spaceDiff, -spaceDiff)
+				if elem.children
+					+articleContent(elem.children, elem.spaces)
+				if elem.posttext
+					+paragraph(elem.posttext, spaceDiff, 0)
+
+mixin paragraph(text, paddingLeft, textIndent)
+	- var text = text.replace(/\n/g, '<br>');
+	- paddingLeft = paddingLeft ? ('padding-left: ' + (paddingLeft / 2) + 'em;') : '';
+	- textIndent = textIndent ? ('text-indent: ' + (textIndent / 2) + 'em;') : '';
+	p(style=paddingLeft+textIndent)!= text

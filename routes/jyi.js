@@ -2,7 +2,7 @@ var config = require('../config.js');
 var express = require('express');
 
 var router = module.exports = express.Router();
-var model = { config: config };
+var model = {};
 
 router.get('/', function(req, res) {
 	config.db.collection('jyi').find().project({

@@ -11,8 +11,4 @@ var config = {
 	siteName	: '法規查詢'
 };
 
-try {
-	config.lawUpdate = fs.readFileSync(config.dataDir + 'UpdateDate.txt');
-} catch(err) {}
-
 module.exports = config;

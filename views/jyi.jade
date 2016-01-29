@@ -2,7 +2,7 @@ extends layout
 
 block content
 	header
-		h1= config.pageTitle
+		h1= pageTitle
 		em= jyi.title
 	nav: ul.inlineList
 		li: a(href='/api/jyi/'+jyi.number, download=jyi.number+'.json') JSON

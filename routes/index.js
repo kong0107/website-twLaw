@@ -3,7 +3,7 @@ var express = require('express');
 var parser = require('../libs/parser.js');
 
 var router = module.exports = express.Router();
-var model = { config: config };
+var model = {};
 
 router.get('/', function(req, res) {
 	config.db.collection('latest').find().sort({'最新異動日期': -1}).limit(20)

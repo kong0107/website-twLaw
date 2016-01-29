@@ -5,7 +5,7 @@ var parser = require('../libs/parser.js');
 var debug = require('debug')(__filename.substr(__dirname.length + 1));
 
 var router = module.exports = express.Router();
-var model = { config: config };
+var model = {};
 
 router.get('/:q?', function(req, res, next) {
 	var q = req.query.q || req.params.q || "";

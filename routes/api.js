@@ -3,10 +3,9 @@ var express = require('express');
 var parser = require('../libs/parser.js');
 
 var router = module.exports = express.Router();
-var model = { config: config };
 
 router.get('/', function(req, res) {
-	res.render('index', model);
+	res.redirect('/');
 });
 
 router.get('/law/:name?', function(req, res) {
@@ -28,14 +27,10 @@ router.get('/law/:name?', function(req, res) {
 			]},
 			{fields: {'_id': 0}},
 			function(err, doc) {
-				if(!doc) {
-					res.jsonp({error: 1, message: '資料庫中無此法規'});
-					return;
-				}
-				res.jsonp(parser.parseLaw(doc));
-				/*doc.history = parser.parseHistory(doc.沿革內容);
-				doc.content = parser.parseLawContent(doc.法規內容);
-				res.jsonp(doc);*/
+				res.jsonp((err || !doc)
+					? {error: 1, message: '資料庫中無此法規'}
+					: parser.parseLaw(doc)
+				);
 			}
 		);
 	}

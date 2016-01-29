@@ -1,10 +1,9 @@
+var fs = require('fs');
 var config = require('./config.js');
 var express = require('express');
 var MongoClient = require('mongodb');
 
 var debug = require('debug')(__filename.substr(__dirname.length + 1));
-
-config.counter = 0;
 
 MongoClient.connect(config.dburl, function(err, database) {
 	if(err) throw err;
@@ -15,22 +14,25 @@ MongoClient.connect(config.dburl, function(err, database) {
 var app = express();
 app.listen(config.port, config.hostname);
 
-app.locals.pageTitle = config.siteName;
+app.locals.siteName = app.locals.pageTitle = config.siteName;
+fs.readFile(config.dataDir + 'json/UpdateDate.txt', function(err, data) {
+	if(!err) app.locals.lawUpdate = data;
+});
+app.locals.visitCounter = 0;
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
 
-app.use(express.static(__dirname + '/public'));
-app.use('/raw/json', express.static(config.dataDir + 'json'));
-
 app.use(function(req, res, next) {
-	config.counter++;
+	++app.locals.visitCounter;
 	next();
 });
 
+app.use(express.static(__dirname + '/public'));
+app.use('/raw/json', express.static(config.dataDir + 'json'));
+
 app.use('/', require('./routes/index.js'));
 app.use('/api', require('./routes/api.js'));
-
 app.use('/search', require('./routes/search.js'));
 app.use('/law', require('./routes/law.js'));
 app.use('/jyi', require('./routes/jyi.js'));

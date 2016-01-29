@@ -4,11 +4,12 @@ html(lang='tw')
 		meta(charset='utf-8')
 		meta(name='viewport', content='width=device-width, initial-scale=1')
 		title= pageTitle
+		script(src='https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.min.js')
 		link(rel='stylesheet', href='/stylesheets/std.css')
 		link(rel='stylesheet', href='/stylesheets/main.css')
 	body
 		header
-			a#brand(href='/')= config.siteName
+			a#brand(href='/')= siteName
 			nav#siteNav
 				ul
 					li: a(href='/law') 法規
@@ -19,10 +20,10 @@ html(lang='tw')
 		section
 			block content
 		footer
-			if config.counter
-				span ##{config.counter}
-			if config.lawUpdate
-				span 法規資料更新日期： #[time= config.lawUpdate]
+			if visitCounter
+				span ##{visitCounter}
+			if lawUpdate
+				span 法規資料更新日期： #[time= lawUpdate]
 			nav: ul.inlineList
 				li: a(href='http://law.moj.gov.tw/PublicData/DevelopGuide.aspx', target='_blank', title='全國法規資料庫') 資料來源
 				li: a(href='https://github.com/kong0107/twLaw/issues', target='_blank', title='GitHub') 錯誤回報

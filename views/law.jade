@@ -2,19 +2,20 @@ extends layout
 
 block content
 	h1(class=law.discarded ? 'discard' : '')= law.name
+
 	nav: ul.inlineList
 		li: a(href='/api/law/'+law.PCode, download=law.PCode+'.json') JSON
 		li: a(href='http://law.moj.gov.tw/LawClass/LawAll.aspx?PCode='+law.PCode, target='_blank') 全國法規資料庫
 	.dlTable
-		dl
-			dt 最新異動日期
-			dd= law.lastUpdate
 		dl
 			dt 法規性質
 			dd= law.characteristic
 		dl
 			dt 法規類別
 			dd= law.category.join(' > ')
+		dl
+			dt 最新異動日期
+			dd: time= law.lastUpdate
 		if law.english
 			dl
 				dt 英文法規名稱
@@ -24,28 +25,32 @@ block content
 				dt 狀態
 				dd.em 已廢止
 
-	h2: a(name='history') 沿革
-	ol.history
-		each amend in law.history
-			li= amend
+	if law.hasDivisions
+		section.toc
+			a(name='toc')
+			each article in law.content
+				if article.divDepth
+					div(class=article.type)
+						a(href='#'+article.type+article.number) 第 #{article.numberString} #{article.type} #{article.title}
 
-	h2: a(name='法規內容') 法規內容
-	if law.preamble
-		article
-			.ordinal(class='前言')
-				a(name='前言') 前言
-			p= law.preamble
-	each article in law.content
-		article
-			- var type = article.type || '條';
-			.ordinal(class=type)
-				a(name=type+article.number)
-					- var sub = article.number % 100;
-					| 第 #{article.number.toString().slice(0, -2)}#{sub ? ('-' + sub) : ''} #{type}
-					if article.title
-						span.title= article.title
-			if article.content
-				+articleContent(article.content)
+	section.lawContent
+		h2: a(name='content') 法規內容
+		if law.preamble
+			article
+				.ordinal(class='前言')
+					a(name='前言') 前言
+				p= law.preamble
+		each article in law.content
+			article
+				- var type = article.type || '條';
+				.ordinal(class=type)
+					a(name=type+article.number)
+						| 第 #{article.numberString} #{type}
+						if article.title
+							span.title= article.title
+				if article.content
+					+articleContent(article.content)
+
 
 mixin articleContent(artCon, spaces)
 	- var style = (spaces === undefined) ? '' : ('padding-left: ' + (spaces / 2) + 'em;');

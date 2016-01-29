@@ -13,6 +13,7 @@ var debug = require('debug')(__filename.substr(__dirname.length + 1));
  * @return {object} returns Law object
  */
 function parseLaw(law, options) {
+	if(!options) options = {};
 	var value;
 	var result = {
 		PCode:			law.PCode,
@@ -31,6 +32,13 @@ function parseLaw(law, options) {
 	};
 	for(var i in result)
 		if(result[i] === null) delete result[i];
+
+	if(options.details) {
+		result.hasDivisions = result.content.some(function(article) {
+			return !!article.divDepth;
+		})
+	}
+
 	return result;
 }
 
@@ -60,9 +68,9 @@ function parseHistory(str) {
  */
 function parseLawContent(lawContent, options) {
 	return lawContent.map(function(ele) {
-		if(ele.編章節 !== undefined) return parseOrdinal(ele.編章節);
+		if(ele.編章節 !== undefined) return parseOrdinal(ele.編章節, options);
 		else {
-			var article = parseOrdinal(ele.條號);
+			var article = parseOrdinal(ele.條號, options);
 			if(ele.條文內容) article.content = parseArticleContent(ele.條文內容, options);
 			return article;
 		}
@@ -73,13 +81,18 @@ function parseLawContent(lawContent, options) {
  * 轉換「條號」與「編章節」。
  * @return {object} returns An object has property `type`, `number`, and maybe `title`.
  */
-function parseOrdinal(str) {
+function parseOrdinal(str, options) {
 	if(!str) return {};	// H0170012 「公共藝術設置辦法」在第一條之前有一個空白的「編章節」。
 	var match = str.match(/^第?\s*([\d零一二三四五六七八九十百千]+)\s*(-(\d+))?\s*([條項編章節款目]|小目)?(\s*之\s*([\d零一二三四五六七八九十百千]+))?\s*/);
 	if(!match) return {warning: '偵測不到條號', title: str};
-	var result = {number: cpi(match[1]) * 100 + cpi(match[3] || match[6] || 0)};
-	if(match[4]) result.type = match[4];
-	//if(options.details && result.type && match[4] != '條') result.isDivision = true;
+	var main = cpi(match[1]);
+	var sub = cpi(match[3] || match[6] || 0);
+	var result = {number: cpi(match[1]) * 100 + sub};
+	if(options.details) result.numberString = main + (sub ? ('-' + sub) : '');
+	if(match[4]) {
+		result.type = match[4];
+		if(options.details) result.divDepth = "條編章節款目".indexOf(result.type);
+	}
 	var title = str.substr(match[0].length).trim();
 	if(title) result.title = title;
 	return result;

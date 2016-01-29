@@ -28,6 +28,7 @@ router.get('/:name?', function(req, res, next) {
 				if(err || !doc) return next();
 				res.locals.pageTitle = doc.法規名稱;
 				model.law = parser.parseLaw(doc, {details: true});
+				model.artNum2str = parser.artNum2str;
 				/*doc.沿革內容 = parser.parseHistory(doc.沿革內容);
 				doc.法規內容.forEach(function(article) {
 					if(article.條文內容) 

@@ -1,5 +1,5 @@
 /**
- * Import data from JSON files.
+ * Import data to database from JSON files.
  *
  * @see https://github.com/kong0107/mojLawSplitJSON
  */

@@ -117,8 +117,9 @@ nav .inlineList li:last-of-type {
 }
 
 .toc li {
-	padding: .15em 0 .15em 1em;
+	padding-left: 1em;
 	text-indent: -1em;
+	line-height: 135%;
 }
 
 .history {
@@ -146,17 +147,13 @@ nav .inlineList li:last-of-type {
 	font-weight: bold;
 	margin-top: 1em;
 }
-.ordinal .title {
-	padding: .1em 1em;
-}
-
+.ordinal .title { padding: .1em 1em; }
 
 .編 {padding-left: 0.2em; }
 .章 {padding-left: 1.2em; }
 .節 {padding-left: 2.2em; }
 .款 {padding-left: 3.2em; }
 .目 {padding-left: 4.2em; }
-
 
 .lawContent .ordinal:not(.條) {
 	background-color: #444;
@@ -180,19 +177,10 @@ nav .inlineList li:last-of-type {
 .條 + ol ol { list-style-type: none; }
 
 article .warning {
-	line-height: 0;
-	font-size: 0;
-	color: transparent;
-}
-article .warning::after {
-	content: '（警告：未能確認是否分項）';
 	font-size: small;
 	line-height: 100%;
-	color: #fff;
 	font-style: italic;
 }
-
-
 
 /**
  * Footer

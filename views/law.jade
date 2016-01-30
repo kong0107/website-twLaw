@@ -15,7 +15,10 @@ block content
 			dd= law.category.join(' > ')
 		dl
 			dt 最新異動日期
-			dd: time= law.lastUpdate
+			dd
+				time= law.lastUpdate
+				br
+				button(ng-click='showHistory=!showHistory') {{showHistory?'隱藏歷次沿革':'顯示歷次沿革 (#{law.history.length})'}}
 		if law.english
 			dl
 				dt 英文法規名稱
@@ -25,10 +28,11 @@ block content
 				dt 狀態
 				dd.em 已廢止
 
-	h2: a(name='history') 沿革
-	ol.history
-		each amend in law.history
-			li= amend
+	section(ng-show='showHistory')
+		h2: a(name='history') 沿革
+			ol.history
+				each amend in law.history
+					li= amend
 
 	if law.hasDivisions
 		section.toc
@@ -80,7 +84,7 @@ mixin articleContent(artCon, spaces)
 			- var spaceDiff = elem.spaces - spaces;
 			li
 				if elem.warning
-					.warning(title=elem.warning) ？？？？
+					.warning(title='因原始資料格式限制，此處'+elem.warning) （#{elem.warning}）
 				+paragraph(elem.text, spaceDiff, -spaceDiff)
 				if elem.children
 					+articleContent(elem.children, elem.spaces)

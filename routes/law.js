@@ -28,6 +28,7 @@ router.get('/:name?', function(req, res, next) {
 				if(err || !doc) return next();
 				res.locals.pageTitle = doc.法規名稱;
 				model.law = parser.parseLaw(doc, {details: true});
+				model.ngController = 'law';
 				res.render('law', model);
 			}
 		);

@@ -34,7 +34,7 @@ block content
 				each amend in law.history
 					li= amend
 
-	if law.hasDivisions
+	if law.tableOfContents && law.tableOfContents.length
 		section.toc
 			a(name='toc')
 			+tableOfContents(law.tableOfContents)

@@ -39,12 +39,6 @@ function parseLaw(law, options) {
 	for(var i in result)
 		if(result[i] === null) delete result[i];
 
-	if(options.details) {
-		result.hasDivisions = result.content.some(function(article) {
-			return !!article.divDepth;
-		})
-	}
-
 	result.tableOfContents = makeTree(result.content);
 
 	return result;
@@ -379,6 +373,12 @@ var stratums = [
         "ordinal": /^\s+[\(（]\d+[\)）] ?/	///< 通常是全形括號、後無空格，例外見 J0030002 「食品工廠建築及設備之設置標準」§15
     },
     {	"name": "subsubsubitem",
-        "ordinal": /^\s+[\uf6b1-\uf6b9]/   ///< 食品工廠建築及設備之設置標準§15
+        "ordinal": /^\s+[\uf6b1-\uf6ba]/   ///< J0030002 食品工廠建築及設備之設置標準§15
+    },
+    {	"name": "subsubsubsubitem",
+        "ordinal": /^\s+[\uf6bb-\uf6c4]/   ///< L0060035 全民健康保險藥物給付項目及支付標準§28
+    },
+    {	"name": "english-item",
+        "ordinal": /^\s+[A-Z]\./   ///< L0060035 全民健康保險藥物給付項目及支付標準§28
     }
 ];

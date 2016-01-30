@@ -16,21 +16,30 @@ var parser = require('./libs/parser.js');
 var debug = require('debug')(__filename.substr(__dirname.length + 1));
 var MongoClient = require('mongodb').MongoClient;
 
-var coll;
+var db;
+var collectionsToDrop = ['latest', 'parsed', 'law', 'article_items'];
 
-MongoClient.connect(config.dburl, function(err, db) {
+MongoClient.connect(config.dburl, function(err, database) {
 	if(err) throw err;
 	console.log('Connected to the database.');
+	db = database;
 
-	coll = db.collection('parsed');
-	coll.drop(function(err, res) {
-		if(!err) console.log('Dropped the old collection.', res);
-		parseDir(0, function(){
-			console.log('Program finished.');
+	dropColl(0, function() {
+		parseDir(0, function() {
 			db.close();
+			console.log('Program finished.');
 		});
 	});
 });
+
+function dropColl(index, callback) {
+	if(index == collectionsToDrop.length) return setImmediate(callback);
+	var collName = collectionsToDrop[index];
+	db.collection(collName).drop(function(err) {
+		if(!err) console.log('Dropped collection `%s`', collName);
+		dropColl(index + 1, callback);
+	})
+}
 
 function parseDir(index, callback) {
 	if(index == subdirs.length) {
@@ -62,10 +71,11 @@ function parseFile(dir, files, index, callback) {
 
 	var PCode = jsObj.法規網址.substr(jsObj.法規網址.indexOf('PCODE') + 6);
 	jsObj.PCode = PCode;
-	debug('即將轉換' + PCode + ' ' + jsObj.法規名稱);
+	/*debug('即將轉換' + PCode + ' ' + jsObj.法規名稱);
 	jsObj = parser.parseLaw(jsObj);
+	delete jsObj.content;*/
 
-	coll.insertOne(jsObj, function(err, result) {
+	db.collection('latest').insertOne(jsObj, function(err, result) {
 		if(err) throw err;
 		setImmediate(parseFile, dir, files, index + 1, callback);
 	});

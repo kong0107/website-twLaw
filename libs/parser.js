@@ -3,6 +3,7 @@ var cpi = require('chinese-parseint');
 var strwidth = require('./strwidth.js');
 
 var debug = require('debug')(__filename.substr(__dirname.length + 1));
+var debugInfo = {};
 
 /**
  * Parse a law object to another object.
@@ -14,7 +15,12 @@ var debug = require('debug')(__filename.substr(__dirname.length + 1));
  */
 function parseLaw(law, options) {
 	if(!options) options = {};
-	var value;
+
+	debugInfo = {
+		PCode:			law.PCode,
+		name:			law.法規名稱
+	};
+
 	var result = {
 		PCode:			law.PCode,
 		characteristic:	law.法規性質,
@@ -70,6 +76,7 @@ function parseHistory(str) {
  */
 function parseLawContent(lawContent, options) {
 	return lawContent.map(function(ele) {
+		debugInfo.ordinal = ele.編章節 || ele.條號;
 		if(ele.編章節 !== undefined) return parseOrdinal(ele.編章節, options);
 		else {
 			var article = parseOrdinal(ele.條號, options);
@@ -85,16 +92,14 @@ function parseLawContent(lawContent, options) {
  */
 function parseOrdinal(str, options) {
 	if(!str) return {};	// H0170012 「公共藝術設置辦法」在第一條之前有一個空白的「編章節」。
+	if(!options) options = {};
 	var match = str.match(/^第?([\d零一二三四五六七八九十百千\s]+)(-(\d+))?\s*([條項編章節款目]|小目)?(\s*之\s*([\d零一二三四五六七八九十百千]+))?\s*/);
 	if(!match) return {warning: '偵測不到條號', title: str};
 	var main = cpi(match[1].replace(/\s/g, ''));	//< 「電業供電線路裝置規則」有個「第 十 四章」
 	var sub = cpi(match[3] || match[6] || 0);
 	var result = {};
-
-	if(match[4]) {
-		result.type = match[4];
-		if(options.details) result.divDepth = "條編章節款目".indexOf(result.type);
-	}
+	result.type = match[4] || '條';
+	if(options.details) result.divDepth = "條編章節款目".indexOf(result.type);
 	result.number = cpi(match[1]) * 100 + sub;
 	if(options.details) result.numberString = main + (sub ? ('-' + sub) : '');
 	var title = str.substr(match[0].length).trim();
@@ -141,6 +146,7 @@ function parseArticleContent(str, options) {
 	if(/[\x20\u3000]{15,}(?=[^\s$])/.test(str)) warning = '偵測到空格排版';
 
 	if(warning) {
+		//debug(warning, debugInfo);
 		var elem = {
 			warning: warning,
 			text: str
@@ -179,6 +185,7 @@ function parseArticleContent(str, options) {
 		// Step 2: 參考前一行的結尾，據以判斷這一行是否為新的項款目。
 		//
 		var newElem = {text: trimmed, stratum: stratum, spaces: spaces};
+		debugInfo.newElem = newElem;
 		if(!index || /（刪除）。?$/.test(prevLine))
 			elems.push(newElem);
 		else if(/[：︰]$/.test(prevLine)) {
@@ -186,7 +193,10 @@ function parseArticleContent(str, options) {
 				prevElem.text += '\n' + line;
 			else if(stratum > prevElem.stratum)
 				elems.push(newElem);
-			else throw new Error('層級錯誤');
+			else {
+				prevElem.warning = '冒號後層級錯誤', debugInfo;
+				prevElem.text += '\n' + line;
+			}
 		}
 		else if(/。、?$/.test(prevLine)) {
 			//< 句號後的頓號出現在「行政院主計處電子處理資料中心辦事細則」
@@ -200,11 +210,19 @@ function parseArticleContent(str, options) {
 					}
 				}
 				else if(stratum > 0) elems.push(newElem);
-				else throw Error('層級錯誤');
+				else if(/^\([附備其]/.test(trimmed)) prevElem.posttext = line;
+				else {
+					prevElem.warning = '句號後層級錯誤';
+					prevElem.text += '\n' + trimmed;
+				}
 			}
 			else elems.push(newElem);
 		}
+		else if(prevElem.posttext) prevElem.posttext += trimmed;
 		else prevElem.text += trimmed;
+
+		warning = newElem.warning || (prevElem && prevElem.warning);
+		//if(warning) debug(warning, debugInfo);
 	});
 
 	// --------------------------------
@@ -255,8 +273,6 @@ function parseArticleContent(str, options) {
 function makeTree(content, options) {
 	if(typeof content == 'string')
 		content = parseLawContent(content, options);
-	//if(!content[0].type || content[0].type == '條') return [];
-
 	//
 	// 找出各個編章節的開始與結束條號。
 	//

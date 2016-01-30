@@ -27,6 +27,13 @@ block content
 			dl
 				dt 狀態
 				dd.em 已廢止
+		if law.schedules
+			dl
+				dt 附件
+				dd
+					ul.inlineList
+						each link, index in law.schedules
+							li: a(href=link)= (index + 1)
 
 	section(ng-show='showHistory')
 		h2: a(name='history') 沿革

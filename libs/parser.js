@@ -32,6 +32,7 @@ function parseLaw(law, options) {
 		discarded:		!!law.廢止註記,
 		translated:		(law.是否英譯註記 === 'Y'),
 		english:		law.英文法規名稱 ? law.英文法規名稱 : null,
+		schedules:		law.附件 ? law.附件 : null,
 		history:		parseHistory(law.沿革內容),
 		preamble:		law.前言 ? law.前言.replace(/\r\n/g, '') : null,
 		content:		parseLawContent(law.法規內容, options)

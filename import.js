@@ -9,7 +9,7 @@
  */
 var config = require('./config.js');
 var jsondir = config.dataDir + 'json/';
-var subdirs = ['FalV', 'MingLing'];
+var subdirs = ['FalVMingLing'];
 
 var fs = require('fs');
 var parser = require('./libs/parser.js');

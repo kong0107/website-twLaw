@@ -2,4 +2,21 @@ extends layout
 
 block content
 	h1= pageTitle
+	em 共 #{count} 筆
+	if count > ipp
+		form.pagination
+			if page > 1
+				a.prevPage(href='/search?q='+q+'&t='+t+'&page='+(page-1)) 上一頁
+			if page < count / ipp
+				a.nextPage(href='/search?q='+q+'&t='+t+'&page='+(page+1)) 下一頁
+			.pageSelector
+				| 第
+				select(name='page', onchange='this.form.submit()')
+					- var p = 0
+					while p < (count / ipp)
+						- ++p
+						option(selected=(p==page))= p
+				| 頁
+			input(type='hidden', name='q', value=q)
+			input(type='hidden', name='t', value=t)
 	include blocks/lawList.jade

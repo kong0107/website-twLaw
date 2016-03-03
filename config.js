@@ -8,7 +8,8 @@ var config = {
 	dburl		: (process.env.OPENSHIFT_MONGODB_DB_URL	|| 'mongodb://localhost:27017/') + 'twlaw',
 	dataDir		: process.env.OPENSHIFT_DATA_DIR 		|| './data/',
 
-	siteName	: '法規查詢'
+	siteName	: '法規查詢',
+	ipp			: 15
 };
 
 module.exports = config;

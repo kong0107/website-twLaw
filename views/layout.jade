@@ -19,6 +19,13 @@ html(lang='tw', ng-app='twLawApp')
 			form#searchBar(action='/search')
 				input(type='text', name='q')
 				input(type='submit', value='查詢')
+				br
+				label
+					input(type='radio', name='t', value='name', checked='checked')
+					| 法規名稱
+				label
+					input(type='radio', name='t', value='content')
+					| 法條內容
 		section(ng-controller=ngController)
 			block content
 		footer

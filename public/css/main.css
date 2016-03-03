@@ -60,6 +60,11 @@ body > header a[href]:hover {
 	right: 0;
 	top: 0;
 }
+#searchBar > label {
+	display: inline-block;
+	min-width: 40%;
+	font-size: small;
+}
 
 
 /**
@@ -183,6 +188,16 @@ article .warning {
 	line-height: 100%;
 	font-style: italic;
 }
+
+.pagination {text-align: center;}
+.prevPage {float: left;}
+.nextPage {float: right;}
+.pagination:after {
+	content: '';
+	display: block;
+	clear: both;
+}
+	
 
 /**
  * Footer

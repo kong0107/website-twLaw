@@ -14,6 +14,8 @@ MongoClient.connect(config.dburl, function(err, database) {
 var app = express();
 app.listen(config.port, config.hostname);
 
+app.locals.db = config.db;
+app.locals.ipp = config.ipp;
 app.locals.siteName = app.locals.pageTitle = config.siteName;
 fs.readFile(config.dataDir + 'json/UpdateDate.txt', function(err, data) {
 	if(!err) app.locals.lawUpdate = data;
@@ -39,7 +41,6 @@ app.use('/jyi', require('./routes/jyi.js'));
 
 app.use(function(req, res) {
 	res.status(404).render('404', {
-		config: config,
 		orignalUrl: req.orignalUrl
 	});
 });

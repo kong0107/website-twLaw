@@ -9,21 +9,28 @@ var model = {};
 
 router.get('/:q?', function(req, res, next) {
 	var q = req.query.q || req.params.q || '';
-	q = q.trim();
+	q = model.q = q.trim();
 	if(!q) return res.redirect('/');
-	model.q = q;
-	res.locals.pageTitle = '搜尋「' + q + '」的結果';
+	model.pageTitle = '搜尋「' + q + '」的結果';
+
+	var searchType = model.t = req.query.t;
+	var page = res.locals.page = parseInt(req.query.page, 10) || 1;
+	var skip = (page - 1) * config.ipp;
 
 	var re = new RegExp(q);
-	config.db.collection('latest').find({$or:[
-		{'法規名稱': re}/*,
-		{'法規內容.條文內容': re}*/
-	]}).limit(20)
-	.project({'法規內容': false}).toArray(function(err, docs) {
-		docs.forEach(function(doc) {
-			doc.沿革內容 = parser.parseHistory(doc.沿革內容);
+	var conds = {$or:[]};
+	if(searchType != 'content') conds.$or.push({'法規名稱': re});
+	if(searchType != 'name') conds.$or.push({'法規內容.條文內容': re});
+
+	var cursor = config.db.collection('latest').find(conds);
+	cursor.count(function(err, result) {
+		model.count = result;
+		cursor.skip(skip).limit(config.ipp).toArray(function(err, docs) {
+			docs.forEach(function(doc) {
+				doc.沿革內容 = parser.parseHistory(doc.沿革內容);
+			});
+			model.lawList = docs;
+			res.render('search', model);
 		});
-		model.lawList = docs;
-		res.render('search', model);
 	});
 });

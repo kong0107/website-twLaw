@@ -5,7 +5,7 @@
 # One argument is required: the tag name for the GitHub repository.
 # The JSON files are reserved in case `import.js` is updated and you wanna use them again.
 #
-if [[ "$#" -eq 1 ]] ; then
+if [[ "$#" -lt 1 ]] ; then
 	echo "Error: require specify tag name"
 	exit 1
 fi

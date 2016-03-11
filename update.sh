@@ -5,7 +5,10 @@
 # One argument is required: the tag name for the GitHub repository.
 # The JSON files are reserved in case `import.js` is updated and you wanna use them again.
 #
-[ "$#" -eq 1 ] || echo "Error: require specify tag name" && exit 1
+if [[ "$#" -eq 1 ]] ; then
+	echo "Error: require specify tag name"
+	exit 1
+fi
 
 cd $OPENSHIFT_DATA_DIR
 wget  https://github.com/kong0107/mojLawSplitJSON/archive/$1.tar.gz
